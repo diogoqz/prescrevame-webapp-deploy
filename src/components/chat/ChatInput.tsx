@@ -1,5 +1,6 @@
 
-import { Send, Paperclip, Mic, MicOff, Image, Eye, EyeOff } from 'lucide-react';
+import React, { useRef } from 'react';
+import { Send, Paperclip, Mic, MicOff, Image, Eye, EyeOff, LogIn } from 'lucide-react';
 import { LoginStep } from '@/hooks/useChatAuth';
 
 interface ChatInputProps {
@@ -35,7 +36,7 @@ export const ChatInput = ({
   user,
   handleButtonClick
 }: ChatInputProps) => {
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const openImageUpload = () => {
     fileInputRef.current?.click();
