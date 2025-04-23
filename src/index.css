@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -35,19 +36,12 @@
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -96,6 +90,52 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-slate-900 text-foreground antialiased;
+  }
+
+  /* Custom scrollbar for WhatsApp style */
+  .chat-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .chat-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .chat-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(134, 150, 160, 0.3);
+    border-radius: 3px;
+  }
+
+  .chat-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(134, 150, 160, 0.5);
+  }
+}
+
+@layer utilities {
+  .chat-bubble-sent {
+    position: relative;
+  }
+
+  .chat-bubble-sent:after {
+    content: '';
+    position: absolute;
+    right: -8px;
+    top: 0;
+    border-top: 8px solid #005C4B;
+    border-right: 8px solid transparent;
+  }
+
+  .chat-bubble-received {
+    position: relative;
+  }
+
+  .chat-bubble-received:after {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 0;
+    border-top: 8px solid #202C33;
+    border-left: 8px solid transparent;
   }
 }

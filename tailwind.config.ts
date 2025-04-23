@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,6 +62,17 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				// WhatsApp dark theme colors
+				whatsapp: {
+					bg: '#0D1418',
+					header: '#1F2C34',
+					accent: '#00A884',
+					bubbleSent: '#005C4B',
+					bubbleReceived: '#202C33',
+					text: '#E9EDF0',
+					textSecondary: '#8696A0',
+					inputBg: '#2A3942',
 				}
 			},
 			borderRadius: {
@@ -84,11 +96,28 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'message-appear': {
+					'0%': { opacity: '0', transform: 'translateY(20px)' },
+					'100%': { opacity: '1', transform: 'translateY(0)' }
+				},
+				'typing-dot': {
+					'0%, 60%, 100%': { transform: 'translateY(0)' },
+					'30%': { transform: 'translateY(-4px)' }
+				},
+				'fade-in': {
+					'0%': { opacity: '0' },
+					'100%': { opacity: '1' }
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'message-appear': 'message-appear 0.3s ease-out forwards',
+				'typing-dot-1': 'typing-dot 1.4s infinite',
+				'typing-dot-2': 'typing-dot 1.4s 0.2s infinite',
+				'typing-dot-3': 'typing-dot 1.4s 0.4s infinite',
+				'fade-in': 'fade-in 0.3s ease-out'
 			}
 		}
 	},
