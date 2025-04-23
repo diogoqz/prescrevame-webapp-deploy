@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Paperclip, Mic, MicOff, Image, X, Eye, EyeOff, LogIn, LogOut, UserPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -22,6 +23,8 @@ interface ApiResponse {
   text?: string;
   buttons?: { id: string; label: string }[];
   image?: string;
+  result?: string;
+  replies?: string[];
 }
 
 const WhatsAppChat: React.FC = () => {
@@ -174,6 +177,58 @@ const WhatsAppChat: React.FC = () => {
     return false;
   };
 
+  const processWebhookResponse = (responseData: any): string[] => {
+    console.log('Processing webhook response:', responseData);
+    const replies: string[] = [];
+
+    // Check if response is an array
+    if (Array.isArray(responseData)) {
+      responseData.forEach(item => {
+        if (item.result) {
+          try {
+            // Try to parse the result as JSON
+            const parsedResult = JSON.parse(item.result);
+            if (parsedResult.replies && Array.isArray(parsedResult.replies)) {
+              // Add each reply to our replies array
+              replies.push(...parsedResult.replies);
+            } else if (parsedResult.reply) {
+              replies.push(parsedResult.reply);
+            }
+          } catch (e) {
+            // If JSON parsing fails, add the result as is
+            replies.push(item.result);
+          }
+        } else if (item.reply) {
+          replies.push(item.reply);
+        }
+      });
+    } else if (responseData && responseData.result) {
+      // Legacy handling for single response object
+      try {
+        const resultObj = JSON.parse(responseData.result);
+        if (resultObj.replies && Array.isArray(resultObj.replies)) {
+          replies.push(...resultObj.replies);
+        } else if (resultObj.reply) {
+          replies.push(resultObj.reply);
+        }
+      } catch (e) {
+        // If JSON parsing fails, add the response as is
+        if (typeof responseData.result === 'string') {
+          replies.push(responseData.result);
+        }
+      }
+    } else if (responseData && responseData.reply) {
+      replies.push(responseData.reply);
+    }
+
+    // If no replies were extracted, add a fallback message
+    if (replies.length === 0) {
+      replies.push('Não foi possível processar a resposta.');
+    }
+
+    return replies;
+  };
+
   const sendMessage = async () => {
     if (!inputMessage.trim() && !selectedImage) return;
     
@@ -227,35 +282,22 @@ const WhatsAppChat: React.FC = () => {
       const responseData = await response.json();
       console.log('Webhook response:', responseData);
       
-      let botReply = '';
-      if (responseData && responseData.result) {
-        try {
-          const resultObj = JSON.parse(responseData.result);
-          botReply = resultObj.reply || 'Não foi possível processar a resposta.';
-        } catch (e) {
-          if (typeof responseData.result === 'object' && responseData.result.reply) {
-            botReply = responseData.result.reply;
-          } else if (typeof responseData.result === 'string') {
-            botReply = responseData.result;
-          } else {
-            botReply = 'Resposta recebida, mas não foi possível processá-la.';
-          }
-        }
-      } else if (responseData && responseData.reply) {
-        botReply = responseData.reply;
-      } else {
-        botReply = 'Resposta recebida, mas em formato inesperado.';
-      }
+      const replies = processWebhookResponse(responseData);
       
-      setTimeout(() => {
-        setIsTyping(false);
-        setMessages(prev => [...prev, {
-          id: Date.now().toString(),
-          text: botReply,
-          sender: 'bot',
-          timestamp: new Date()
-        }]);
-      }, 800);
+      // Add each reply as a separate bot message with a small delay between them
+      setIsTyping(false);
+      
+      replies.forEach((reply, index) => {
+        setTimeout(() => {
+          setMessages(prev => [...prev, {
+            id: Date.now().toString() + '-' + index,
+            text: reply,
+            sender: 'bot',
+            timestamp: new Date()
+          }]);
+        }, 800 * (index + 1));
+      });
+      
     } catch (error) {
       console.error('Error sending message:', error);
       setIsTyping(false);
@@ -385,10 +427,8 @@ const WhatsAppChat: React.FC = () => {
                   </div>
                 )}
                 
-                <p className="text-whatsapp-text">
-                  {loginStep === 'password' && message.sender === 'user' 
-                    ? '•'.repeat(message.text.length)
-                    : message.text}
+                <p className="text-whatsapp-text whitespace-pre-line">
+                  {message.text}
                 </p>
                 
                 {message.buttons && message.buttons.length > 0 && (
