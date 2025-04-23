@@ -25,58 +25,65 @@ export const useWebhookMessages = () => {
     const replies: string[] = [];
 
     try {
-      if (Array.isArray(responseData)) {
+      // Caso 1: Resposta direta do webhook sem array
+      if (!Array.isArray(responseData)) {
+        // Se tiver o campo "reply", é uma única mensagem
+        if (responseData.reply) {
+          replies.push(responseData.reply);
+        }
+        // Se tiver o campo "replies", são múltiplas mensagens
+        else if (responseData.replies && Array.isArray(responseData.replies)) {
+          responseData.replies.forEach((reply: string) => {
+            replies.push(reply);
+          });
+        }
+      } 
+      // Caso 2: Array de resultados do webhook
+      else if (Array.isArray(responseData)) {
         responseData.forEach(item => {
           if (item.result) {
             try {
-              // Parse the result if it's a string
+              // Tentar fazer parse do result se for string
               const parsedResult = typeof item.result === 'string' 
                 ? JSON.parse(item.result) 
                 : item.result;
               
-              // Handle "replies" array
-              if (parsedResult.replies && Array.isArray(parsedResult.replies)) {
-                // Each item in replies becomes a separate message
+              // Caso 2.1: campo "reply" em parsedResult
+              if (parsedResult.reply) {
+                replies.push(parsedResult.reply);
+              }
+              // Caso 2.2: campo "replies" em parsedResult
+              else if (parsedResult.replies && Array.isArray(parsedResult.replies)) {
                 parsedResult.replies.forEach((reply: string) => {
                   replies.push(reply);
                 });
-              } 
-              // Handle single "reply"
-              else if (typeof parsedResult.reply === 'string') {
-                replies.push(parsedResult.reply);
-              } 
-              // If parsedResult itself is a string
+              }
+              // Caso 2.3: parsedResult é uma string
               else if (typeof parsedResult === 'string') {
                 replies.push(parsedResult);
               }
             } catch (e) {
-              // If parsing fails, use the raw result string
+              console.error('Erro ao processar o resultado:', e);
+              // Se não conseguir fazer parse, usar o item.result diretamente se for string
               if (typeof item.result === 'string') {
-                replies.push(item.result);
+                try {
+                  // Tenta fazer parse diretamente do result
+                  const directResult = JSON.parse(item.result);
+                  if (directResult.reply) {
+                    replies.push(directResult.reply);
+                  } else if (directResult.replies && Array.isArray(directResult.replies)) {
+                    directResult.replies.forEach((reply: string) => {
+                      replies.push(reply);
+                    });
+                  }
+                } catch (innerError) {
+                  // Se falhar em fazer parse como JSON, use como texto puro
+                  replies.push(item.result);
+                }
               }
             }
           }
         });
-      } else if (responseData && responseData.result) {
-        // Handle non-array response
-        try {
-          const resultData = typeof responseData.result === 'string' 
-            ? JSON.parse(responseData.result)
-            : responseData.result;
-
-          if (resultData.replies && Array.isArray(resultData.replies)) {
-            // Each reply becomes a separate message
-            resultData.replies.forEach((reply: string) => {
-              replies.push(reply);
-            });
-          } else if (typeof resultData.reply === 'string') {
-            replies.push(resultData.reply);
-          }
-        } catch (error) {
-          if (typeof responseData.result === 'string') {
-            replies.push(responseData.result);
-          }
-        }
       }
 
       if (replies.length === 0) {
