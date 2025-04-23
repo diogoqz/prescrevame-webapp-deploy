@@ -24,11 +24,19 @@
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
       <script>
-  document.addEventListener('DOMContentLoaded', function () {
+  const hideBadge = () => {
     const badge = document.getElementById('lovable-badge');
     if (badge) badge.style.display = 'none';
-  });
+  };
+
+  // Tenta ocultar direto ao carregar
+  document.addEventListener('DOMContentLoaded', hideBadge);
+
+  // Observa mudanças no DOM, útil se a badge for inserida depois
+  const observer = new MutationObserver(hideBadge);
+  observer.observe(document.body, { childList: true, subtree: true });
 </script>
+
 
   </body>
     
