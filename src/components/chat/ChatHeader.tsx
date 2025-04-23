@@ -10,9 +10,14 @@ interface ChatHeaderProps {
 export const ChatHeader = ({ user, onSignOut }: ChatHeaderProps) => {
   return (
     <div className="flex items-center gap-3 px-4 py-3 bg-whatsapp-header">
-      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-whatsapp-accent flex items-center justify-center">
-        <span className="text-white font-bold">PM</span>
-      </div>
+    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-whatsapp-accent flex items-center justify-center overflow-hidden">
+  <img
+    src="https://i.ibb.co/Fqqf1YF6/pme-logo-round.png"
+    alt="Logo"
+    className="w-full h-full object-cover rounded-full"
+  />
+</div>
+
       <div className="flex-1">
         <h3 className="font-bold text-whatsapp-text">PrescrevaMe</h3>
         <p className="text-xs text-whatsapp-textSecondary">
