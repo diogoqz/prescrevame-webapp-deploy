@@ -19,7 +19,8 @@ interface Message {
 }
 
 interface ApiResponse {
-  text: string;
+  reply?: string;
+  text?: string;
   buttons?: { id: string; label: string }[];
   image?: string;
 }
@@ -95,6 +96,7 @@ const WhatsAppChat: React.FC = () => {
     }
     
     try {
+      console.log('Sending message to webhook...');
       const response = await fetch('https://app-n8n.icogub.easypanel.host/webhook/f54cf431-4260-4e9f-ac60-c7d5feab9c35', {
         method: 'POST',
         body: formData
@@ -104,17 +106,36 @@ const WhatsAppChat: React.FC = () => {
         throw new Error('Network response was not ok');
       }
       
-      const data: ApiResponse = await response.json();
+      const responseData = await response.json();
+      console.log('Webhook response:', responseData);
+      
+      let botReply = '';
+      if (responseData && responseData.result) {
+        try {
+          const resultObj = JSON.parse(responseData.result);
+          botReply = resultObj.reply || 'Não foi possível processar a resposta.';
+        } catch (e) {
+          if (typeof responseData.result === 'object' && responseData.result.reply) {
+            botReply = responseData.result.reply;
+          } else if (typeof responseData.result === 'string') {
+            botReply = responseData.result;
+          } else {
+            botReply = 'Resposta recebida, mas não foi possível processá-la.';
+          }
+        }
+      } else if (responseData && responseData.reply) {
+        botReply = responseData.reply;
+      } else {
+        botReply = 'Resposta recebida, mas em formato inesperado.';
+      }
       
       setTimeout(() => {
         setIsTyping(false);
         setMessages(prev => [...prev, {
           id: Date.now().toString(),
-          text: data.text,
+          text: botReply,
           sender: 'bot',
-          timestamp: new Date(),
-          buttons: data.buttons,
-          image: data.image
+          timestamp: new Date()
         }]);
       }, 800);
     } catch (error) {
