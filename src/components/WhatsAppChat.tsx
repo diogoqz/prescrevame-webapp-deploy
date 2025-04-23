@@ -1,9 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Paperclip, Mic, MicOff, Image, X, LogIn } from 'lucide-react';
+import { Send, Paperclip, Mic, MicOff, Image, X, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 
-// Define message types
 interface MessageButton {
   id: string;
   label: string;
@@ -27,43 +26,168 @@ interface ApiResponse {
 
 const WhatsAppChat: React.FC = () => {
   const { user, signIn, signUp } = useAuth();
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: '1',
-      text: user 
-        ? 'Olá! Eu sou o PrescrevaMe. Como posso te ajudar hoje?' 
-        : 'Bem-vindo ao PrescrevaMe! Por favor, faça login ou cadastre-se para continuar.',
-      sender: 'bot',
-      timestamp: new Date(),
-      buttons: !user ? [
-        { id: 'login', label: 'Login' },
-        { id: 'signup', label: 'Cadastro' },
-        { id: 'info', label: 'Mais Informações' }
-      ] : undefined
-    }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginStep, setLoginStep] = useState<'idle' | 'email' | 'password'>('idle');
+  const [showPassword, setShowPassword] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
-  const [showAuthForm, setShowAuthForm] = useState(false);
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    setMessages([
+      {
+        id: '1',
+        text: user 
+          ? 'Olá! Eu sou o PrescrevaMe. Como posso te ajudar hoje?' 
+          : 'Bem-vindo ao PrescrevaMe! Por favor, faça login ou cadastre-se para continuar.',
+        sender: 'bot',
+        timestamp: new Date(),
+        buttons: !user ? [
+          { id: 'login', label: 'Login' },
+          { id: 'signup', label: 'Cadastro' },
+          { id: 'info', label: 'Mais Informações' }
+        ] : undefined
+      }
+    ]);
+  }, [user]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const handleButtonClick = async (buttonId: string, buttonLabel: string) => {
+    const newUserMessage: Message = {
+      id: Date.now().toString(),
+      text: buttonLabel,
+      sender: 'user',
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, newUserMessage]);
+
+    if (buttonId === 'login' || buttonId === 'signup') {
+      setAuthMode(buttonId as 'login' | 'signup');
+      setLoginStep('email');
+      const actionText = buttonId === 'login' ? 'fazer login' : 'se cadastrar';
+      
+      setTimeout(() => {
+        setMessages(prev => [...prev, {
+          id: Date.now().toString(),
+          text: `Por favor, digite seu email para ${actionText}:`,
+          sender: 'bot',
+          timestamp: new Date()
+        }]);
+      }, 500);
+      return;
+    }
+
+    if (buttonId === 'info') {
+      setTimeout(() => {
+        setMessages(prev => [...prev, {
+          id: Date.now().toString(),
+          text: 'O PrescrevaMe é um assistente virtual especializado em auxiliar profissionais de saúde. Para utilizar nossos serviços, é necessário fazer login ou se cadastrar.',
+          sender: 'bot',
+          timestamp: new Date(),
+          buttons: [
+            { id: 'login', label: 'Login' },
+            { id: 'signup', label: 'Cadastro' }
+          ]
+        }]);
+      }, 500);
+    }
+  };
+
+  const handleAuthMessage = async (message: string) => {
+    if (loginStep === 'email') {
+      setLoginEmail(message);
+      setLoginStep('password');
+      
+      setTimeout(() => {
+        setMessages(prev => [...prev, {
+          id: Date.now().toString(),
+          text: 'Agora, digite sua senha:',
+          sender: 'bot',
+          timestamp: new Date()
+        }]);
+      }, 500);
+      return true;
+    }
+    
+    if (loginStep === 'password') {
+      setLoginPassword(message);
+      try {
+        if (authMode === 'login') {
+          await signIn(loginEmail, message);
+          toast({
+            title: "Sucesso!",
+            description: "Login realizado com sucesso.",
+          });
+        } else {
+          await signUp(loginEmail, message);
+          toast({
+            title: "Sucesso!",
+            description: "Cadastro realizado com sucesso. Verifique seu email.",
+          });
+        }
+        setLoginStep('idle');
+        setLoginEmail('');
+        setLoginPassword('');
+        return true;
+      } catch (error) {
+        toast({
+          title: "Erro",
+          description: error instanceof Error ? error.message : "Ocorreu um erro durante a autenticação.",
+          variant: "destructive"
+        });
+        setLoginStep('idle');
+        setLoginEmail('');
+        setLoginPassword('');
+        
+        setTimeout(() => {
+          setMessages(prev => [...prev, {
+            id: Date.now().toString(),
+            text: 'Ocorreu um erro. Por favor, tente novamente:',
+            sender: 'bot',
+            timestamp: new Date(),
+            buttons: [
+              { id: 'login', label: 'Login' },
+              { id: 'signup', label: 'Cadastro' }
+            ]
+          }]);
+        }, 500);
+      }
+      return true;
+    }
+    return false;
+  };
+
   const sendMessage = async () => {
+    if (!inputMessage.trim() && !selectedImage) return;
+    
+    const messageText = inputMessage.trim();
+    setInputMessage('');
+
+    const newUserMessage: Message = {
+      id: Date.now().toString(),
+      text: messageText,
+      sender: 'user',
+      timestamp: new Date(),
+      image: imagePreview || undefined
+    };
+    setMessages(prev => [...prev, newUserMessage]);
+    
+    if (loginStep !== 'idle') {
+      const handled = await handleAuthMessage(messageText);
+      if (handled) return;
+    }
+
     if (!user) {
       toast({
         title: "Não autorizado",
@@ -73,18 +197,6 @@ const WhatsAppChat: React.FC = () => {
       return;
     }
 
-    if ((!inputMessage.trim() && !selectedImage) || isTyping) return;
-    
-    const newUserMessage: Message = {
-      id: Date.now().toString(),
-      text: inputMessage.trim(),
-      sender: 'user',
-      timestamp: new Date(),
-      image: imagePreview || undefined
-    };
-    
-    setMessages(prev => [...prev, newUserMessage]);
-    setInputMessage('');
     setIsTyping(true);
     setSelectedImage(null);
     setImagePreview(null);
@@ -187,47 +299,6 @@ const WhatsAppChat: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
-  const handleButtonClick = (buttonId: string, buttonLabel: string) => {
-    const newUserMessage: Message = {
-      id: Date.now().toString(),
-      text: buttonLabel,
-      sender: 'user',
-      timestamp: new Date()
-    };
-    
-    setMessages(prev => [...prev, newUserMessage]);
-
-    if (buttonId === 'login' || buttonId === 'signup') {
-      setAuthMode(buttonId as 'login' | 'signup');
-      setShowAuthForm(true);
-      return;
-    }
-
-    if (buttonId === 'info') {
-      const infoMessage: Message = {
-        id: Date.now().toString() + '-info',
-        text: 'O PrescrevaMe é um assistente virtual especializado em auxiliar profissionais de saúde. Para utilizar nossos serviços, é necessário fazer login ou se cadastrar.',
-        sender: 'bot',
-        timestamp: new Date(),
-        buttons: [
-          { id: 'login', label: 'Login' },
-          { id: 'signup', label: 'Cadastro' }
-        ]
-      };
-      setMessages(prev => [...prev, infoMessage]);
-    }
-  };
-
-  const toggleRecording = () => {
-    setIsRecording(!isRecording);
-    if (!isRecording) {
-      toast({
-        title: "Gravação de voz",
-        description: "Funcionalidade em desenvolvimento.",
-      });
-    }
-  };
-
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('pt-BR', {
       hour: '2-digit',
@@ -245,29 +316,12 @@ const WhatsAppChat: React.FC = () => {
     setImagePreview(null);
   };
 
-  const handleAuthButton = async () => {
-    try {
-      if (authMode === 'login') {
-        await signIn(email, password);
-        toast({
-          title: "Sucesso!",
-          description: "Login realizado com sucesso.",
-        });
-      } else {
-        await signUp(email, password);
-        toast({
-          title: "Sucesso!",
-          description: "Cadastro realizado com sucesso. Verifique seu email.",
-        });
-      }
-      setShowAuthForm(false);
-      setEmail('');
-      setPassword('');
-    } catch (error) {
+  const toggleRecording = () => {
+    setIsRecording(!isRecording);
+    if (!isRecording) {
       toast({
-        title: "Erro",
-        description: error instanceof Error ? error.message : "Ocorreu um erro durante a autenticação.",
-        variant: "destructive"
+        title: "Gravação de voz",
+        description: "Funcionalidade em desenvolvimento.",
       });
     }
   };
@@ -316,7 +370,11 @@ const WhatsAppChat: React.FC = () => {
                   </div>
                 )}
                 
-                <p className="text-whatsapp-text">{message.text}</p>
+                <p className="text-whatsapp-text">
+                  {loginStep === 'password' && message.sender === 'user' 
+                    ? '•'.repeat(message.text.length)
+                    : message.text}
+                </p>
                 
                 {message.buttons && message.buttons.length > 0 && (
                   <div className="mt-3 space-y-2">
@@ -356,52 +414,13 @@ const WhatsAppChat: React.FC = () => {
           <div ref={messagesEndRef} />
         </div>
 
-        {showAuthForm && (
-          <div className="px-4 py-3 bg-whatsapp-header">
-            <div className="space-y-2">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Email"
-                className="w-full px-4 py-2 rounded-full bg-whatsapp-inputBg text-whatsapp-text placeholder-whatsapp-textSecondary focus:outline-none"
-              />
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Senha"
-                className="w-full px-4 py-2 rounded-full bg-whatsapp-inputBg text-whatsapp-text placeholder-whatsapp-textSecondary focus:outline-none"
-              />
-              <div className="flex gap-2">
-                <button
-                  onClick={handleAuthButton}
-                  className="flex-1 py-2 px-4 bg-whatsapp-accent text-white rounded-md text-sm font-medium transition-colors hover:bg-opacity-90"
-                >
-                  {authMode === 'login' ? 'Entrar' : 'Cadastrar'}
-                </button>
-                <button
-                  onClick={() => setShowAuthForm(false)}
-                  className="py-2 px-4 bg-red-500 text-white rounded-md text-sm font-medium transition-colors hover:bg-opacity-90"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-        
         <div className="px-4 py-3 bg-whatsapp-header flex items-center gap-2">
-          {!user ? (
+          {!user && loginStep === 'idle' ? (
             <div className="flex-1 text-center">
               <button
-                onClick={() => {
-                  setAuthMode('login');
-                  setShowAuthForm(true);
-                }}
+                onClick={() => handleButtonClick('login', 'Login')}
                 className="py-2 px-4 bg-whatsapp-accent text-white rounded-md text-sm font-medium transition-colors hover:bg-opacity-90 flex items-center justify-center gap-2 w-full"
               >
-                <LogIn size={18} />
                 Faça login para enviar mensagens
               </button>
             </div>
@@ -433,9 +452,18 @@ const WhatsAppChat: React.FC = () => {
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  placeholder="Digite uma mensagem"
+                  placeholder={loginStep === 'password' ? 'Digite sua senha' : 'Digite uma mensagem'}
+                  type={loginStep === 'password' && !showPassword ? 'password' : 'text'}
                   className="w-full px-4 py-2 rounded-full bg-whatsapp-inputBg text-whatsapp-text placeholder-whatsapp-textSecondary focus:outline-none"
                 />
+                {loginStep === 'password' && (
+                  <button
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-whatsapp-textSecondary hover:text-whatsapp-accent transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                )}
               </div>
               
               {inputMessage.trim() || imagePreview ? (
