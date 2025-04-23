@@ -21,7 +21,7 @@ export const ChatHeader = ({ user, onSignOut }: ChatHeaderProps) => {
       <div className="flex-1">
         <h3 className="font-bold text-whatsapp-text">PrescrevaMe</h3>
         <p className="text-xs text-whatsapp-textSecondary">
-          {user ? user.email : 'Faça login para continuar'}
+          {user ? 'Faça login para continuar'user.email : 'Faça login para continuar'}
         </p>
       </div>
       {user && (
