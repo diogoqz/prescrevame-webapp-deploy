@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Paperclip, Mic, MicOff, Image, X, Eye, EyeOff } from 'lucide-react';
+import { Send, Paperclip, Mic, MicOff, Image, X, Eye, EyeOff, LogIn, LogOut, UserPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -25,7 +25,7 @@ interface ApiResponse {
 }
 
 const WhatsAppChat: React.FC = () => {
-  const { user, signIn, signUp } = useAuth();
+  const { user, signIn, signUp, signOut } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -59,8 +59,14 @@ const WhatsAppChat: React.FC = () => {
     ]);
   }, [user]);
 
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isTyping]);
+
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   const handleButtonClick = async (buttonId: string, buttonLabel: string) => {
@@ -339,6 +345,15 @@ const WhatsAppChat: React.FC = () => {
               {user ? user.email : 'offline'}
             </p>
           </div>
+          {user && (
+            <button
+              onClick={signOut}
+              className="text-whatsapp-textSecondary hover:text-whatsapp-accent transition-colors flex items-center gap-2"
+              title="Sair"
+            >
+              <LogOut size={24} />
+            </button>
+          )}
         </div>
         
         <div 
@@ -421,6 +436,7 @@ const WhatsAppChat: React.FC = () => {
                 onClick={() => handleButtonClick('login', 'Login')}
                 className="py-2 px-4 bg-whatsapp-accent text-white rounded-md text-sm font-medium transition-colors hover:bg-opacity-90 flex items-center justify-center gap-2 w-full"
               >
+                <LogIn size={20} />
                 Faça login para enviar mensagens
               </button>
             </div>
@@ -453,8 +469,8 @@ const WhatsAppChat: React.FC = () => {
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder={loginStep === 'password' ? 'Digite sua senha' : 'Digite uma mensagem'}
-                  type={loginStep === 'password' && !showPassword ? 'password' : 'text'}
                   className="w-full px-4 py-2 rounded-full bg-whatsapp-inputBg text-whatsapp-text placeholder-whatsapp-textSecondary focus:outline-none"
+                  {...(loginStep === 'password' ? { type: showPassword ? 'text' : 'password' } : {})}
                 />
                 {loginStep === 'password' && (
                   <button
