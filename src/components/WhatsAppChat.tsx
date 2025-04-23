@@ -1,13 +1,10 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Paperclip, Mic, MicOff, Image, X, Eye, EyeOff, LogIn, LogOut, UserPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
-
-interface MessageButton {
-  id: string;
-  label: string;
-}
+import { useChatAuth } from '@/hooks/useChatAuth';
+import { useWebhookMessages } from '@/hooks/useWebhookMessages';
+import { ChatHeader } from './chat/ChatHeader';
+import { ChatInput } from './chat/ChatInput';
 
 interface Message {
   id: string;
@@ -18,31 +15,31 @@ interface Message {
   image?: string;
 }
 
-interface ApiResponse {
-  reply?: string;
-  text?: string;
-  buttons?: { id: string; label: string }[];
-  image?: string;
-  result?: string;
-  replies?: string[];
+interface MessageButton {
+  id: string;
+  label: string;
 }
 
 const WhatsAppChat: React.FC = () => {
-  const { user, signIn, signUp, signOut } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-  const [loginStep, setLoginStep] = useState<'idle' | 'email' | 'password'>('idle');
-  const [showPassword, setShowPassword] = useState(false);
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+
+  const {
+    user,
+    signOut,
+    loginStep,
+    showPassword,
+    setShowPassword,
+    handleAuthButton,
+    handleAuthMessage
+  } = useChatAuth();
+
+  const { isTyping, sendMessageToWebhook } = useWebhookMessages();
 
   useEffect(() => {
     setMessages([
@@ -73,160 +70,8 @@ const WhatsAppChat: React.FC = () => {
   };
 
   const handleButtonClick = async (buttonId: string, buttonLabel: string) => {
-    const newUserMessage: Message = {
-      id: Date.now().toString(),
-      text: buttonLabel,
-      sender: 'user',
-      timestamp: new Date()
-    };
-    setMessages(prev => [...prev, newUserMessage]);
-
-    if (buttonId === 'login' || buttonId === 'signup') {
-      setAuthMode(buttonId as 'login' | 'signup');
-      setLoginStep('email');
-      const actionText = buttonId === 'login' ? 'fazer login' : 'se cadastrar';
-      
-      setTimeout(() => {
-        setMessages(prev => [...prev, {
-          id: Date.now().toString(),
-          text: `Por favor, digite seu email para ${actionText}:`,
-          sender: 'bot',
-          timestamp: new Date()
-        }]);
-      }, 500);
-      return;
-    }
-
-    if (buttonId === 'info') {
-      setTimeout(() => {
-        setMessages(prev => [...prev, {
-          id: Date.now().toString(),
-          text: 'O PrescrevaMe é um assistente virtual especializado em auxiliar profissionais de saúde. Para utilizar nossos serviços, é necessário fazer login ou se cadastrar.',
-          sender: 'bot',
-          timestamp: new Date(),
-          buttons: [
-            { id: 'login', label: 'Login' },
-            { id: 'signup', label: 'Cadastro' }
-          ]
-        }]);
-      }, 500);
-    }
-  };
-
-  const handleAuthMessage = async (message: string) => {
-    if (loginStep === 'email') {
-      setLoginEmail(message);
-      setLoginStep('password');
-      
-      setTimeout(() => {
-        setMessages(prev => [...prev, {
-          id: Date.now().toString(),
-          text: 'Agora, digite sua senha:',
-          sender: 'bot',
-          timestamp: new Date()
-        }]);
-      }, 500);
-      return true;
-    }
-    
-    if (loginStep === 'password') {
-      setLoginPassword(message);
-      try {
-        if (authMode === 'login') {
-          await signIn(loginEmail, message);
-          toast({
-            title: "Sucesso!",
-            description: "Login realizado com sucesso.",
-          });
-        } else {
-          await signUp(loginEmail, message);
-          toast({
-            title: "Sucesso!",
-            description: "Cadastro realizado com sucesso. Verifique seu email.",
-          });
-        }
-        setLoginStep('idle');
-        setLoginEmail('');
-        setLoginPassword('');
-        return true;
-      } catch (error) {
-        toast({
-          title: "Erro",
-          description: error instanceof Error ? error.message : "Ocorreu um erro durante a autenticação.",
-          variant: "destructive"
-        });
-        setLoginStep('idle');
-        setLoginEmail('');
-        setLoginPassword('');
-        
-        setTimeout(() => {
-          setMessages(prev => [...prev, {
-            id: Date.now().toString(),
-            text: 'Ocorreu um erro. Por favor, tente novamente:',
-            sender: 'bot',
-            timestamp: new Date(),
-            buttons: [
-              { id: 'login', label: 'Login' },
-              { id: 'signup', label: 'Cadastro' }
-            ]
-          }]);
-        }, 500);
-      }
-      return true;
-    }
-    return false;
-  };
-
-  const processWebhookResponse = (responseData: any): string[] => {
-    console.log('Processing webhook response:', responseData);
-    const replies: string[] = [];
-
-    // Check if response is an array
-    if (Array.isArray(responseData)) {
-      responseData.forEach(item => {
-        if (item.result) {
-          try {
-            // Try to parse the result as JSON
-            const parsedResult = JSON.parse(item.result);
-            if (parsedResult.replies && Array.isArray(parsedResult.replies)) {
-              // Add each reply to our replies array
-              replies.push(...parsedResult.replies);
-            } else if (parsedResult.reply) {
-              replies.push(parsedResult.reply);
-            }
-          } catch (e) {
-            // If JSON parsing fails, add the result as is
-            replies.push(item.result);
-          }
-        } else if (item.reply) {
-          replies.push(item.reply);
-        }
-      });
-    } else if (responseData && responseData.result) {
-      // Legacy handling for single response object
-      try {
-        const resultObj = JSON.parse(responseData.result);
-        if (resultObj.replies && Array.isArray(resultObj.replies)) {
-          replies.push(...resultObj.replies);
-        } else if (resultObj.reply) {
-          replies.push(resultObj.reply);
-        }
-      } catch (e) {
-        // If JSON parsing fails, add the response as is
-        if (typeof responseData.result === 'string') {
-          replies.push(responseData.result);
-        }
-      }
-    } else if (responseData && responseData.reply) {
-      replies.push(responseData.reply);
-    }
-
-    // If no replies were extracted, add a fallback message
-    if (replies.length === 0) {
-      replies.push('Não foi possível processar a resposta.');
-    }
-
-    return replies;
+    const newMessages = await handleAuthButton(buttonId, buttonLabel);
+    setMessages(prev => [...prev, ...newMessages]);
   };
 
   const sendMessage = async () => {
@@ -245,8 +90,11 @@ const WhatsAppChat: React.FC = () => {
     setMessages(prev => [...prev, newUserMessage]);
     
     if (loginStep !== 'idle') {
-      const handled = await handleAuthMessage(messageText);
-      if (handled) return;
+      const [handled, newMessages] = await handleAuthMessage(messageText);
+      if (handled) {
+        setMessages(prev => [...prev, ...newMessages]);
+        return;
+      }
     }
 
     if (!user) {
@@ -258,55 +106,21 @@ const WhatsAppChat: React.FC = () => {
       return;
     }
 
-    setIsTyping(true);
-    setSelectedImage(null);
-    setImagePreview(null);
-    
     const formData = new FormData();
-    formData.append('message', inputMessage.trim());
+    formData.append('message', messageText);
     if (selectedImage) {
       formData.append('image', selectedImage);
     }
     
-    try {
-      console.log('Sending message to webhook...');
-      const response = await fetch('https://app-n8n.icogub.easypanel.host/webhook/f54cf431-4260-4e9f-ac60-c7d5feab9c35', {
-        method: 'POST',
-        body: formData
-      });
-      
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
-      }
-      
-      const responseData = await response.json();
-      console.log('Webhook response:', responseData);
-      
-      const replies = processWebhookResponse(responseData);
-      
-      // Add each reply as a separate bot message with a small delay between them
-      setIsTyping(false);
-      
-      replies.forEach((reply, index) => {
-        setTimeout(() => {
-          setMessages(prev => [...prev, {
-            id: Date.now().toString() + '-' + index,
-            text: reply,
-            sender: 'bot',
-            timestamp: new Date()
-          }]);
-        }, 800 * (index + 1));
-      });
-      
-    } catch (error) {
-      console.error('Error sending message:', error);
-      setIsTyping(false);
-      toast({
-        title: "Erro",
-        description: "Não foi possível enviar sua mensagem. Tente novamente.",
-        variant: "destructive"
-      });
-    }
+    const botMessages = await sendMessageToWebhook(formData);
+    botMessages.forEach((message, index) => {
+      setTimeout(() => {
+        setMessages(prev => [...prev, message]);
+      }, 800 * (index + 1));
+    });
+
+    setSelectedImage(null);
+    setImagePreview(null);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -329,7 +143,7 @@ const WhatsAppChat: React.FC = () => {
       return;
     }
     
-    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+    if (file.size > 5 * 1024 * 1024) {
       toast({
         title: "Erro",
         description: "A imagem deve ter menos de 5MB.",
@@ -347,23 +161,6 @@ const WhatsAppChat: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('pt-BR', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    });
-  };
-
-  const openImageUpload = () => {
-    fileInputRef.current?.click();
-  };
-
-  const clearImagePreview = () => {
-    setSelectedImage(null);
-    setImagePreview(null);
-  };
-
   const toggleRecording = () => {
     setIsRecording(!isRecording);
     if (!isRecording) {
@@ -374,29 +171,18 @@ const WhatsAppChat: React.FC = () => {
     }
   };
 
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString('pt-BR', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+  };
+
   return (
     <div className="flex justify-center items-center min-h-screen p-4">
       <div className="flex flex-col w-full max-w-md h-[600px] rounded-lg overflow-hidden shadow-xl bg-whatsapp-bg">
-        <div className="flex items-center gap-3 px-4 py-3 bg-whatsapp-header">
-          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-whatsapp-accent flex items-center justify-center">
-            <span className="text-white font-bold">PM</span>
-          </div>
-          <div className="flex-1">
-            <h3 className="font-bold text-whatsapp-text">PrescrevaMe</h3>
-            <p className="text-xs text-whatsapp-textSecondary">
-              {user ? user.email : 'offline'}
-            </p>
-          </div>
-          {user && (
-            <button
-              onClick={signOut}
-              className="text-whatsapp-textSecondary hover:text-whatsapp-accent transition-colors flex items-center gap-2"
-              title="Sair"
-            >
-              <LogOut size={24} />
-            </button>
-          )}
-        </div>
+        <ChatHeader user={user} onSignOut={signOut} />
         
         <div 
           className="flex-1 p-4 overflow-y-auto chat-scrollbar"
@@ -405,7 +191,7 @@ const WhatsAppChat: React.FC = () => {
             backgroundSize: "200px 200px"
           }}
         >
-          {messages.map((message, index) => (
+          {messages.map((message) => (
             <div 
               key={message.id}
               className={`flex mb-4 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
@@ -415,7 +201,6 @@ const WhatsAppChat: React.FC = () => {
                   ${message.sender === 'user' 
                     ? 'bg-whatsapp-bubbleSent chat-bubble-sent' 
                     : 'bg-whatsapp-bubbleReceived chat-bubble-received'}`}
-                style={{ animationDelay: `${index * 0.1}s` }}
               >
                 {message.image && (
                   <div className="mb-2 rounded overflow-hidden">
@@ -469,77 +254,22 @@ const WhatsAppChat: React.FC = () => {
           <div ref={messagesEndRef} />
         </div>
 
-        <div className="px-4 py-3 bg-whatsapp-header flex items-center gap-2">
-          {!user && loginStep === 'idle' ? (
-            <div className="flex-1 text-center">
-              <button
-                onClick={() => handleButtonClick('login', 'Login')}
-                className="py-2 px-4 bg-whatsapp-accent text-white rounded-md text-sm font-medium transition-colors hover:bg-opacity-90 flex items-center justify-center gap-2 w-full"
-              >
-                <LogIn size={20} />
-                Faça login para enviar mensagens
-              </button>
-            </div>
-          ) : (
-            <>
-              <button 
-                onClick={openImageUpload}
-                className="text-whatsapp-textSecondary hover:text-whatsapp-accent transition-colors"
-              >
-                <Image size={24} />
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleImageUpload}
-                  accept="image/*"
-                  className="hidden"
-                />
-              </button>
-              
-              <button 
-                className="text-whatsapp-textSecondary hover:text-whatsapp-accent transition-colors"
-              >
-                <Paperclip size={24} />
-              </button>
-              
-              <div className="flex-1 relative">
-                <input
-                  type="text"
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder={loginStep === 'password' ? 'Digite sua senha' : 'Digite uma mensagem'}
-                  className="w-full px-4 py-2 rounded-full bg-whatsapp-inputBg text-whatsapp-text placeholder-whatsapp-textSecondary focus:outline-none"
-                  {...(loginStep === 'password' ? { type: showPassword ? 'text' : 'password' } : {})}
-                />
-                {loginStep === 'password' && (
-                  <button
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-whatsapp-textSecondary hover:text-whatsapp-accent transition-colors"
-                  >
-                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                  </button>
-                )}
-              </div>
-              
-              {inputMessage.trim() || imagePreview ? (
-                <button 
-                  onClick={sendMessage}
-                  className="text-whatsapp-accent hover:text-whatsapp-text transition-colors"
-                >
-                  <Send size={24} />
-                </button>
-              ) : (
-                <button 
-                  onClick={toggleRecording}
-                  className="text-whatsapp-accent hover:text-whatsapp-text transition-colors"
-                >
-                  {isRecording ? <MicOff size={24} /> : <Mic size={24} />}
-                </button>
-              )}
-            </>
-          )}
-        </div>
+        <ChatInput
+          inputMessage={inputMessage}
+          setInputMessage={setInputMessage}
+          onSendMessage={sendMessage}
+          onKeyDown={handleKeyDown}
+          isTyping={isTyping}
+          loginStep={loginStep}
+          showPassword={showPassword}
+          setShowPassword={setShowPassword}
+          imagePreview={imagePreview}
+          onImageUpload={handleImageUpload}
+          onToggleRecording={toggleRecording}
+          isRecording={isRecording}
+          user={user}
+          handleButtonClick={handleButtonClick}
+        />
       </div>
     </div>
   );
