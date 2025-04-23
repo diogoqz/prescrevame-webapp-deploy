@@ -12,12 +12,20 @@ const queryClient = new QueryClient();
 
 const App = () => {
   useEffect(() => {
-    const timeout = setTimeout(() => {
+    const hideBadge = () => {
       const badge = document.getElementById("lovable-badge");
       if (badge) badge.style.display = "none";
-    }, 2000);
+    };
 
-    return () => clearTimeout(timeout);
+    const timeout = setTimeout(hideBadge, 2000);
+
+    const observer = new MutationObserver(hideBadge);
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    return () => {
+      clearTimeout(timeout);
+      observer.disconnect();
+    };
   }, []);
 
   return (
