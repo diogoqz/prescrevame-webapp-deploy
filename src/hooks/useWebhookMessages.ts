@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -28,15 +29,28 @@ export const useWebhookMessages = () => {
         responseData.forEach(item => {
           if (item.result) {
             try {
-              const parsedResult = JSON.parse(item.result);
+              // Parse the result if it's a string
+              const parsedResult = typeof item.result === 'string' 
+                ? JSON.parse(item.result) 
+                : item.result;
+              
+              // Handle "replies" array
               if (parsedResult.replies && Array.isArray(parsedResult.replies)) {
-                replies.push(...parsedResult.replies);
-              } else if (typeof parsedResult.reply === 'string') {
+                // Each item in replies becomes a separate message
+                parsedResult.replies.forEach((reply: string) => {
+                  replies.push(reply);
+                });
+              } 
+              // Handle single "reply"
+              else if (typeof parsedResult.reply === 'string') {
                 replies.push(parsedResult.reply);
-              } else if (typeof parsedResult === 'string') {
+              } 
+              // If parsedResult itself is a string
+              else if (typeof parsedResult === 'string') {
                 replies.push(parsedResult);
               }
             } catch (e) {
+              // If parsing fails, use the raw result string
               if (typeof item.result === 'string') {
                 replies.push(item.result);
               }
@@ -44,14 +58,24 @@ export const useWebhookMessages = () => {
           }
         });
       } else if (responseData && responseData.result) {
-        const resultData = typeof responseData.result === 'string' 
-          ? JSON.parse(responseData.result)
-          : responseData.result;
+        // Handle non-array response
+        try {
+          const resultData = typeof responseData.result === 'string' 
+            ? JSON.parse(responseData.result)
+            : responseData.result;
 
-        if (resultData.replies && Array.isArray(resultData.replies)) {
-          replies.push(...resultData.replies);
-        } else if (typeof resultData.reply === 'string') {
-          replies.push(resultData.reply);
+          if (resultData.replies && Array.isArray(resultData.replies)) {
+            // Each reply becomes a separate message
+            resultData.replies.forEach((reply: string) => {
+              replies.push(reply);
+            });
+          } else if (typeof resultData.reply === 'string') {
+            replies.push(resultData.reply);
+          }
+        } catch (error) {
+          if (typeof responseData.result === 'string') {
+            replies.push(responseData.result);
+          }
         }
       }
 
