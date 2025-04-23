@@ -1,10 +1,10 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useChatAuth } from '@/hooks/useChatAuth';
 import { useWebhookMessages } from '@/hooks/useWebhookMessages';
 import { ChatHeader } from './chat/ChatHeader';
 import { ChatInput } from './chat/ChatInput';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Message {
   id: string;
@@ -21,6 +21,7 @@ interface MessageButton {
 }
 
 const WhatsAppChat: React.FC = () => {
+  const isMobile = useIsMobile();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -180,8 +181,8 @@ const WhatsAppChat: React.FC = () => {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen p-4">
-      <div className="flex flex-col w-full max-w-md h-[600px] rounded-lg overflow-hidden shadow-xl bg-whatsapp-bg">
+    <div className={`flex justify-center items-center ${isMobile ? 'h-[100dvh] w-screen p-0' : 'p-4'}`}>
+      <div className={`flex flex-col ${isMobile ? 'w-full h-full' : 'w-full max-w-md h-[600px]'} rounded-lg overflow-hidden shadow-xl bg-whatsapp-bg`}>
         <ChatHeader user={user} onSignOut={signOut} />
         
         <div 

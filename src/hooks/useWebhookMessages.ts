@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -24,42 +23,44 @@ export const useWebhookMessages = () => {
     console.log('Processing webhook response:', responseData);
     const replies: string[] = [];
 
-    if (Array.isArray(responseData)) {
-      responseData.forEach(item => {
-        if (item.result) {
-          try {
-            const parsedResult = JSON.parse(item.result);
-            if (parsedResult.replies && Array.isArray(parsedResult.replies)) {
-              replies.push(...parsedResult.replies);
-            } else if (parsedResult.reply) {
-              replies.push(parsedResult.reply);
+    try {
+      if (Array.isArray(responseData)) {
+        responseData.forEach(item => {
+          if (item.result) {
+            try {
+              const parsedResult = JSON.parse(item.result);
+              if (parsedResult.replies && Array.isArray(parsedResult.replies)) {
+                replies.push(...parsedResult.replies);
+              } else if (typeof parsedResult.reply === 'string') {
+                replies.push(parsedResult.reply);
+              } else if (typeof parsedResult === 'string') {
+                replies.push(parsedResult);
+              }
+            } catch (e) {
+              if (typeof item.result === 'string') {
+                replies.push(item.result);
+              }
             }
-          } catch (e) {
-            replies.push(item.result);
           }
-        } else if (item.reply) {
-          replies.push(item.reply);
-        }
-      });
-    } else if (responseData && responseData.result) {
-      try {
-        const resultObj = JSON.parse(responseData.result);
-        if (resultObj.replies && Array.isArray(resultObj.replies)) {
-          replies.push(...resultObj.replies);
-        } else if (resultObj.reply) {
-          replies.push(resultObj.reply);
-        }
-      } catch (e) {
-        if (typeof responseData.result === 'string') {
-          replies.push(responseData.result);
+        });
+      } else if (responseData && responseData.result) {
+        const resultData = typeof responseData.result === 'string' 
+          ? JSON.parse(responseData.result)
+          : responseData.result;
+
+        if (resultData.replies && Array.isArray(resultData.replies)) {
+          replies.push(...resultData.replies);
+        } else if (typeof resultData.reply === 'string') {
+          replies.push(resultData.reply);
         }
       }
-    } else if (responseData && responseData.reply) {
-      replies.push(responseData.reply);
-    }
 
-    if (replies.length === 0) {
-      replies.push('Não foi possível processar a resposta.');
+      if (replies.length === 0) {
+        replies.push('Não foi possível processar a resposta.');
+      }
+    } catch (error) {
+      console.error('Error processing webhook response:', error);
+      replies.push('Erro ao processar a resposta.');
     }
 
     return replies;
