@@ -1,6 +1,6 @@
 
 {
-  "name": "PrescrevaMe",
+  "name": "PrescrevaMe - Assistente Médico",
   "short_name": "PrescrevaMe",
   "description": "Sua plataforma de assistência médica inteligente",
   "start_url": "/",
@@ -11,12 +11,14 @@
     {
       "src": "/lovable-uploads/f9d8ee9c-efab-4f5c-98b5-b08a1a131d86.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "/lovable-uploads/f9d8ee9c-efab-4f5c-98b5-b08a1a131d86.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

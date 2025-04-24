@@ -1,19 +1,21 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PrescrevaMe - Chatbot</title>
-    <meta name="description" content="PrescrevaMe - Assistente de prescrições médicas inteligente" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>PrescrevaMe - Assistente Médico</title>
+    <meta name="description" content="PrescrevaMe - Sua plataforma de assistência médica inteligente" />
     <meta name="author" content="PrescrevaMe" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#57D789" />
     <link rel="icon" href="/lovable-uploads/f9d8ee9c-efab-4f5c-98b5-b08a1a131d86.png" />
     <link rel="apple-touch-icon" href="/lovable-uploads/f9d8ee9c-efab-4f5c-98b5-b08a1a131d86.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PrescrevaMe" />
     
-    <meta property="og:title" content="PrescrevaMe - Chatbot" />
-    <meta property="og:description" content="Assistente de prescrições médicas inteligente" />
+    <meta property="og:title" content="PrescrevaMe - Assistente Médico" />
+    <meta property="og:description" content="Sua plataforma de assistência médica inteligente" />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="/lovable-uploads/f9d8ee9c-efab-4f5c-98b5-b08a1a131d86.png" />
 
@@ -41,10 +43,10 @@
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/service-worker.js')
             .then((registration) => {
-              console.log('ServiceWorker registration successful');
+              console.log('ServiceWorker registrado com sucesso');
             })
             .catch((err) => {
-              console.log('ServiceWorker registration failed: ', err);
+              console.log('Erro ao registrar ServiceWorker: ', err);
             });
         });
       }
@@ -54,7 +56,6 @@
         if (badge) badge.style.display = 'none';
       }, 5000);
     </script>
-    <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>

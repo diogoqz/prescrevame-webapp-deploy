@@ -1,4 +1,4 @@
-const CACHE_NAME = 'prescrevame-cache-v3'; // Incremented version
+const CACHE_NAME = 'prescrevame-cache-v4';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -10,11 +10,11 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('Opened cache');
+        console.log('Cache aberto com sucesso');
         return cache.addAll(urlsToCache);
       })
       .catch(error => {
-        console.error('Pre-caching failed:', error);
+        console.error('Erro no pre-cache:', error);
       })
   );
 });

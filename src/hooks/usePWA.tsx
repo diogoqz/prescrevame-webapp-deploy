@@ -1,12 +1,13 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Download } from 'lucide-react';
 
 export const usePWA = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const { toast } = useToast();
 
-  // Function to handle installation click
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
 
@@ -15,8 +16,10 @@ export const usePWA = () => {
     
     if (outcome === 'accepted') {
       toast({
-        title: "Obrigado por instalar! 🎉",
-        description: "Agora você tem acesso rápido ao PrescrevaMe direto do seu dispositivo.",
+        title: "✨ Instalação concluída!",
+        description: "O PrescrevaMe agora está disponível no seu dispositivo.",
+        className: "bg-gradient-to-r from-prescrevame to-prescrevame-dark text-black",
+        duration: 5000,
       });
     }
     
@@ -29,16 +32,18 @@ export const usePWA = () => {
       setDeferredPrompt(e);
       
       toast({
-        title: "Instale o PrescrevaMe",
-        description: "Baixe nosso app para ter acesso rápido e offline às funcionalidades! 🚀",
+        title: "💫 Instale o PrescrevaMe",
+        description: "Tenha acesso rápido e offline ao seu assistente médico!",
         action: (
-          <button
+          <Button
             onClick={() => handleInstallClick()}
-            className="bg-prescrevame hover:bg-prescrevame-dark text-black font-medium px-4 py-1 rounded-md transition-colors"
+            className="bg-black/10 hover:bg-black/20 text-black font-medium px-4 py-2 rounded-full transition-all duration-300 flex items-center gap-2"
           >
-            Instalar
-          </button>
+            <Download size={18} />
+            Instalar App
+          </Button>
         ),
+        className: "bg-gradient-to-r from-prescrevame to-prescrevame-dark text-black border-none",
         duration: 10000,
       });
     };
@@ -48,7 +53,7 @@ export const usePWA = () => {
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
-  }, [toast]); // Added toast as dependency
+  }, [toast]);
 
   return { handleInstallClick, canInstall: !!deferredPrompt };
 };
