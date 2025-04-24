@@ -1,6 +1,5 @@
-
 import React, { useRef, useState, useCallback } from 'react';
-import { Send, Image, Mic, MicOff, Eye, EyeOff, LogIn, X } from 'lucide-react';
+import { Send, Mic, Paperclip, Image, X, MicOff, Eye, EyeOff, LogIn } from 'lucide-react';
 import { LoginStep } from '@/hooks/useChatAuth';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -43,7 +42,7 @@ export const ChatInput = ({
   const [isDragging, setIsDragging] = useState(false);
   const dropZoneRef = useRef<HTMLDivElement>(null);
 
-  const openImageUpload = () => {
+  const openFileUpload = () => {
     fileInputRef.current?.click();
   };
 
@@ -63,7 +62,6 @@ export const ChatInput = ({
     e.preventDefault();
     e.stopPropagation();
     
-    // Check if we're still within the drop zone
     const rect = dropZoneRef.current?.getBoundingClientRect();
     if (rect) {
       const { clientX, clientY } = e;
@@ -171,7 +169,7 @@ export const ChatInput = ({
           </div>
         ) : (
           <>
-            {/* Microfone sempre à esquerda */}
+            {/* Mic icon first */}
             <Button 
               variant="ghost"
               size="icon"
@@ -179,6 +177,23 @@ export const ChatInput = ({
               className="rounded-full text-whatsapp-textSecondary hover:text-prescrevame hover:bg-whatsapp-inputBg transition-all duration-300"
             >
               {isRecording ? <MicOff size={24} /> : <Mic size={24} />}
+            </Button>
+            
+            {/* Paperclip icon second */}
+            <Button 
+              variant="ghost"
+              size="icon"
+              onClick={openFileUpload}
+              className="rounded-full text-whatsapp-textSecondary hover:text-prescrevame hover:bg-whatsapp-inputBg transition-all duration-300"
+            >
+              <Paperclip size={24} />
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={onImageUpload}
+                accept="image/*"
+                className="hidden"
+              />
             </Button>
             
             <div className={`flex-1 relative transition-all duration-300 ${isFocused ? 'scale-105' : ''}`}>
@@ -203,7 +218,7 @@ export const ChatInput = ({
               )}
             </div>
             
-            {/* Alternância entre botão de imagem e botão de enviar à direita */}
+            {/* Image/Send button on the right */}
             <AnimatePresence mode="wait">
               {inputMessage.trim() || imagePreview ? (
                 <motion.div
@@ -233,17 +248,10 @@ export const ChatInput = ({
                   <Button 
                     variant="ghost"
                     size="icon"
-                    onClick={openImageUpload}
+                    onClick={openFileUpload}
                     className="rounded-full text-whatsapp-textSecondary hover:text-prescrevame hover:bg-whatsapp-inputBg"
                   >
                     <Image size={24} />
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={onImageUpload}
-                      accept="image/*"
-                      className="hidden"
-                    />
                   </Button>
                 </motion.div>
               )}
