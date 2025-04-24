@@ -1,9 +1,13 @@
-
 import { useState } from 'react';
 import { Message } from '@/types/Message';
 
 export const useWebhookMessages = () => {
   const [isTyping, setIsTyping] = useState(false);
+
+  const formatMessage = (text: string): string => {
+    // Replace *text* with actual text while preserving the asterisks
+    return text.replace(/\\n/g, '\n').replace(/\\"/g, '"');
+  };
 
   const sendMessageToWebhook = async (formData: FormData) => {
     setIsTyping(true);
@@ -45,86 +49,44 @@ export const useWebhookMessages = () => {
       const responseData = await response.json();
       console.log('Response from webhook:', responseData);
 
-      // Create a timestamp to ensure messages have unique IDs but appear at the same time
+      // Create a timestamp for the base message
       const currentTimestamp = new Date();
       
-      // Process the response data
       if (responseData && Array.isArray(responseData)) {
-        // Handle array of response objects
         responseData.forEach((item, index) => {
           if (typeof item === 'object' && item !== null && item.result) {
             try {
-              // Parse the result string to get the JSON content
               const parsedResult = JSON.parse(item.result);
               
-              // Handle single reply format: { reply: "message" }
               if (parsedResult.reply) {
+                // Single reply format
                 messages.push({
                   id: `${Date.now()}-${index}`,
-                  text: parsedResult.reply,
+                  text: formatMessage(parsedResult.reply),
                   sender: 'bot',
                   timestamp: currentTimestamp
                 });
-              }
-              // Handle multiple replies format: { replies: ["message1", "message2"] }
-              else if (parsedResult.replies && Array.isArray(parsedResult.replies)) {
+              } else if (parsedResult.replies && Array.isArray(parsedResult.replies)) {
+                // Multiple replies format
                 parsedResult.replies.forEach((reply: string, replyIndex: number) => {
                   messages.push({
                     id: `${Date.now()}-${index}-${replyIndex}`,
-                    text: reply,
+                    text: formatMessage(reply),
                     sender: 'bot',
-                    timestamp: new Date(currentTimestamp.getTime() + (replyIndex * 1000)) // 1 second interval between messages
+                    timestamp: new Date(currentTimestamp.getTime() + (replyIndex * 1000)) // 1 second interval
                   });
-                });
-              } else {
-                // Fallback for other structures
-                messages.push({
-                  id: `${Date.now()}-${index}`,
-                  text: JSON.stringify(parsedResult),
-                  sender: 'bot',
-                  timestamp: currentTimestamp
                 });
               }
             } catch (err) {
               console.error('Error parsing result JSON:', err, item.result);
               messages.push({
                 id: `${Date.now()}-${index}`,
-                text: typeof item.result === 'string' ? item.result : JSON.stringify(item.result),
+                text: typeof item.result === 'string' ? formatMessage(item.result) : JSON.stringify(item.result),
                 sender: 'bot',
                 timestamp: currentTimestamp
               });
             }
-          } else if (typeof item === 'string') {
-            messages.push({
-              id: `${Date.now()}-${index}`,
-              text: item,
-              sender: 'bot',
-              timestamp: currentTimestamp
-            });
-          } else {
-            messages.push({
-              id: `${Date.now()}-${index}`,
-              text: JSON.stringify(item),
-              sender: 'bot',
-              timestamp: currentTimestamp
-            });
           }
-        });
-      } else if (responseData && typeof responseData === 'object') {
-        // Handle case where response is a single object
-        messages.push({
-          id: Date.now().toString(),
-          text: responseData.text || responseData.message || JSON.stringify(responseData),
-          sender: 'bot',
-          timestamp: currentTimestamp
-        });
-      } else {
-        console.warn('Resposta do webhook não está no formato esperado:', responseData);
-        messages.push({
-          id: Date.now().toString(),
-          text: "Resposta do servidor recebida, mas em formato não esperado.",
-          sender: 'bot',
-          timestamp: currentTimestamp
         });
       }
 
