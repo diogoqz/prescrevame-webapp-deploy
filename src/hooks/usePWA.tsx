@@ -18,7 +18,7 @@ export const usePWA = () => {
       toast({
         title: "✨ Instalação concluída!",
         description: "O PrescrevaMe agora está disponível no seu dispositivo.",
-        className: "bg-gradient-to-r from-prescrevame to-prescrevame-dark text-black",
+        className: "bg-gradient-to-r from-prescrevame to-prescrevame-dark text-black font-medium",
         duration: 5000,
       });
     }
@@ -36,7 +36,7 @@ export const usePWA = () => {
         description: "Tenha acesso rápido e offline ao seu assistente médico!",
         action: (
           <Button
-            onClick={() => handleInstallClick()}
+            onClick={handleInstallClick}
             className="bg-black/10 hover:bg-black/20 text-black font-medium px-4 py-2 rounded-full transition-all duration-300 flex items-center gap-2"
           >
             <Download size={18} />
@@ -44,14 +44,20 @@ export const usePWA = () => {
           </Button>
         ),
         className: "bg-gradient-to-r from-prescrevame to-prescrevame-dark text-black border-none",
-        duration: 10000,
+        duration: 0, // Never auto-dismiss
       });
     };
 
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt as EventListener);
+
+    // Check if app is already installed
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    if (isStandalone) {
+      console.log('Aplicativo já está instalado');
+    }
 
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt as EventListener);
     };
   }, [toast]);
 

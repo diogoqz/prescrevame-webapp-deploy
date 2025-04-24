@@ -5,8 +5,10 @@
   "description": "Sua plataforma de assistência médica inteligente",
   "start_url": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#0D1418",
   "theme_color": "#57D789",
+  "categories": ["medical", "healthcare", "productivity"],
   "icons": [
     {
       "src": "/lovable-uploads/f9d8ee9c-efab-4f5c-98b5-b08a1a131d86.png",
@@ -20,5 +22,17 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "shortcuts": [
+    {
+      "name": "Iniciar Chat",
+      "short_name": "Chat",
+      "description": "Iniciar uma nova conversa",
+      "url": "/?source=pwa",
+      "icons": [{ "src": "/lovable-uploads/f9d8ee9c-efab-4f5c-98b5-b08a1a131d86.png", "sizes": "192x192" }]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "screenshots": []
 }

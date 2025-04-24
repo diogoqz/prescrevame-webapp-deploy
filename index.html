@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
   <head>
@@ -49,7 +50,14 @@
               console.log('Erro ao registrar ServiceWorker: ', err);
             });
         });
+      } else {
+        console.log('ServiceWorker não suportado neste navegador');
       }
+      
+      // Detecta se o app está instalado
+      window.addEventListener('appinstalled', (evt) => {
+        console.log('PrescrevaMe foi instalado com sucesso!');
+      });
       
       setTimeout(() => {
         const badge = document.getElementById('lovable-badge');
