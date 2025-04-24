@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Message } from '@/types/Message';
 
@@ -5,7 +6,7 @@ export const useWebhookMessages = () => {
   const [isTyping, setIsTyping] = useState(false);
 
   const formatMessage = (text: string): string => {
-    // Replace *text* with actual text while preserving the asterisks
+    // Replace escaped characters with actual characters
     return text.replace(/\\n/g, '\n').replace(/\\"/g, '"');
   };
 
@@ -67,13 +68,13 @@ export const useWebhookMessages = () => {
                   timestamp: currentTimestamp
                 });
               } else if (parsedResult.replies && Array.isArray(parsedResult.replies)) {
-                // Multiple replies format
+                // Multiple replies format - add each reply as a separate message with a time delay
                 parsedResult.replies.forEach((reply: string, replyIndex: number) => {
                   messages.push({
                     id: `${Date.now()}-${index}-${replyIndex}`,
                     text: formatMessage(reply),
                     sender: 'bot',
-                    timestamp: new Date(currentTimestamp.getTime() + (replyIndex * 1000)) // 1 second interval
+                    timestamp: new Date(currentTimestamp.getTime() + (replyIndex * 1000)) // 1 second interval between messages
                   });
                 });
               }
