@@ -33,7 +33,7 @@ export const usePWA = () => {
       
       toast({
         title: "💫 Instale o PrescrevaMe",
-        description: "Tenha acesso rápido e offline ao seu assistente médico!",
+        description: "Tenha acesso rápido ao seu assistente médico!",
         action: (
           <Button
             onClick={handleInstallClick}
