@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -20,6 +19,7 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [activeStep, setActiveStep] = useState(0);
+  const [logoError, setLogoError] = useState(false);
   const { signIn, signUp, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -66,11 +66,18 @@ const Auth = () => {
         <div className="absolute bottom-0 right-0 w-64 h-64 rounded-full bg-blue-500/20 blur-3xl animate-pulse"></div>
         
         <div className="mb-8 flex flex-col items-center animate-scale-up">
-          <img
-            src="/lovable-uploads/f9d8ee9c-efab-4f5c-98b5-b08a1a131d86.png"
-            alt="PrescrevaMe Logo"
-            className="h-24 w-auto mb-4 drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]"
-          />
+          {!logoError ? (
+            <img
+              src="/lovable-uploads/f9d8ee9c-efab-4f5c-98b5-b08a1a131d86.png"
+              alt="PrescrevaMe Logo"
+              className="h-24 w-auto mb-4 drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]"
+              onError={() => setLogoError(true)}
+            />
+          ) : (
+            <div className="h-24 w-24 mb-4 flex items-center justify-center bg-purple-500 rounded-full text-white text-2xl font-bold">
+              PM
+            </div>
+          )}
           <h1 className="text-3xl font-bold text-white text-center">
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600">Prescreva</span>.me
           </h1>

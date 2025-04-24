@@ -6,7 +6,7 @@ export const usePWA = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const { toast } = useToast();
 
-  // Precisamos definir handleInstallClick antes de usá-lo no useEffect
+  // Function to handle installation click
   const handleInstallClick = async () => {
     if (!deferredPrompt) return;
 
@@ -48,8 +48,7 @@ export const usePWA = () => {
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
-  // Adicionamos handleInstallClick como dependência do useEffect para evitar warnings
-  }, []);
+  }, [toast]); // Added toast as dependency
 
   return { handleInstallClick, canInstall: !!deferredPrompt };
 };
