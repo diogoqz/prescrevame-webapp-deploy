@@ -28,7 +28,7 @@ export const AppConfig = {
   // Chat Configuration
   chat: {
     desktop: {
-      maxWidth: "lg", // Tailwind max-w classes: sm, md, lg, xl
+      maxWidth: "xl", // Tailwind max-w classes: sm, md, lg, xl
       padding: "4", // Tailwind p classes: 0-16
     },
     welcome: {
