@@ -30,15 +30,16 @@ export const ChatHeader = ({ user, onSignOut }: ChatHeaderProps) => {
         </p>
       </div>
       
-      <Button 
-        variant="ghost" 
-        size="icon"
-        onClick={() => setSupportDialogOpen(true)}
-        className="rounded-full text-prescrevame hover:bg-prescrevame/10 hover:text-prescrevame-light tech-glow"
-        title="Suporte"
-      >
-        <HeadphonesIcon size={22} />
-      </Button>
+     <a 
+  href="https://api.whatsapp.com/send?phone=556392437559&text=SUPORTE" 
+  target="_blank" 
+  rel="noopener noreferrer"
+  className="rounded-full text-prescrevame hover:bg-prescrevame/10 hover:text-prescrevame-light tech-glow flex items-center justify-center w-10 h-10"
+  title="Suporte"
+>
+  <HeadphonesIcon size={22} />
+</a>
+
       
       {user && (
         <button
