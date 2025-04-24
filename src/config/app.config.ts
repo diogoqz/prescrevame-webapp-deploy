@@ -34,6 +34,32 @@ export const AppConfig = {
       authenticated: "Olá! Eu sou o PrescrevaMe. Como posso te ajudar hoje?",
       unauthenticated: "Bem-vindo ao PrescrevaMe! Por favor, faça login ou cadastre-se para continuar.",
     },
+    initialSuggestions: [
+      {
+        title: "Prescrever medicação",
+        examples: [
+          "Prescrever dipirona 500mg",
+          "Criar prescrição de ibuprofeno",
+          "Nova prescrição de amoxicilina"
+        ]
+      },
+      {
+        title: "Consultar doses",
+        examples: [
+          "Qual a dose de amoxicilina para criança?",
+          "Dosagem de dipirona infantil",
+          "Dose máxima de ibuprofeno"
+        ]
+      },
+      {
+        title: "Gerar documentos",
+        examples: [
+          "Criar atestado médico",
+          "Gerar pedido de exame",
+          "Nova receita médica"
+        ]
+      }
+    ],
     quickCommands: [
       {
         id: 'lista',
