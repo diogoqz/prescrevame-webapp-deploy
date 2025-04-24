@@ -3,21 +3,16 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { Card } from '@/components/ui/card';
 import AuthCard from '@/components/auth/AuthCard';
-import InfoCard from '@/components/auth/InfoCard';
 import { Stethoscope } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { EffectCards } from 'swiper/modules';
-import 'swiper/css';
-import 'swiper/css/effect-cards';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
-  const [activeStep, setActiveStep] = useState(0);
   const { signIn, signUp, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -65,7 +60,7 @@ const Auth = () => {
 
   return (
     <div className="min-h-[100dvh] w-screen flex items-center justify-center bg-whatsapp-bg relative overflow-hidden">
-      {/* Background elements */}
+      {/* Enhanced Animated background elements */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-prescrevame/5 rounded-full blur-3xl animate-blob"></div>
         <div className="absolute top-[20%] right-[20%] w-[400px] h-[400px] bg-prescrevame-light/10 rounded-full blur-3xl animate-blob animation-delay-2000"></div>
@@ -141,32 +136,20 @@ const Auth = () => {
             transition={{ duration: 0.4 }}
             className="transform transition-all duration-500"
           >
-            <Swiper
-              effect={'cards'}
-              grabCursor={true}
-              modules={[EffectCards]}
-              className="w-full"
-              onSlideChange={(swiper) => setActiveStep(swiper.activeIndex)}
-            >
-              <SwiperSlide>
-                <AuthCard
-                  authMode={authMode}
-                  email={email}
-                  password={password}
-                  showPassword={showPassword}
-                  onEmailChange={(e) => setEmail(e.target.value)}
-                  onPasswordChange={(e) => setPassword(e.target.value)}
-                  onTogglePassword={() => setShowPassword(!showPassword)}
-                  onSubmit={handleSubmit}
-                  onModeChange={handleModeChange}
-                  onSupport={handleSupport}
-                />
-              </SwiperSlide>
-
-              <SwiperSlide>
-                <InfoCard onBackToLogin={() => setActiveStep(0)} />
-              </SwiperSlide>
-            </Swiper>
+            <Card className="bg-whatsapp-bubbleReceived border-none shadow-lg hover:shadow-xl transition-all duration-300">
+              <AuthCard
+                authMode={authMode}
+                email={email}
+                password={password}
+                showPassword={showPassword}
+                onEmailChange={(e) => setEmail(e.target.value)}
+                onPasswordChange={(e) => setPassword(e.target.value)}
+                onTogglePassword={() => setShowPassword(!showPassword)}
+                onSubmit={handleSubmit}
+                onModeChange={handleModeChange}
+                onSupport={handleSupport}
+              />
+            </Card>
           </motion.div>
         </AnimatePresence>
 
