@@ -56,40 +56,74 @@ export const useWebhookMessages = () => {
 
       const currentTimestamp = new Date();
       
-      if (responseData && Array.isArray(responseData)) {
-        responseData.forEach((item, index) => {
-          if (typeof item === 'object' && item !== null && item.result) {
+      // Primeiro, verifique se responseData é um array
+      if (Array.isArray(responseData)) {
+        let delayIndex = 0;
+        
+        // Processar cada item do array
+        for (let i = 0; i < responseData.length; i++) {
+          const item = responseData[i];
+          
+          if (item && typeof item === 'object' && item.result) {
             try {
               const parsedResult = JSON.parse(item.result);
               
+              // Caso 1: Se temos um campo "reply" único
               if (parsedResult.reply) {
                 messages.push({
-                  id: `${Date.now()}-${index}`,
+                  id: `${Date.now()}-${i}`,
                   text: formatMessage(parsedResult.reply),
                   sender: 'bot',
-                  timestamp: currentTimestamp
+                  timestamp: new Date(currentTimestamp.getTime() + (delayIndex * 1000))
                 });
-              } else if (parsedResult.replies && Array.isArray(parsedResult.replies)) {
+                delayIndex++;
+              }
+              // Caso 2: Se temos um array de "replies"
+              else if (parsedResult.replies && Array.isArray(parsedResult.replies)) {
                 parsedResult.replies.forEach((reply: string, replyIndex: number) => {
                   messages.push({
-                    id: `${Date.now()}-${index}-${replyIndex}`,
+                    id: `${Date.now()}-${i}-${replyIndex}`,
                     text: formatMessage(reply),
                     sender: 'bot',
-                    timestamp: new Date(currentTimestamp.getTime() + (replyIndex * 1000))
+                    timestamp: new Date(currentTimestamp.getTime() + (delayIndex * 1000))
                   });
+                  delayIndex++;
                 });
               }
             } catch (err) {
               console.error('Error parsing result JSON:', err, item.result);
               messages.push({
-                id: `${Date.now()}-${index}`,
+                id: `${Date.now()}-${i}`,
                 text: typeof item.result === 'string' ? formatMessage(item.result) : JSON.stringify(item.result),
                 sender: 'bot',
-                timestamp: currentTimestamp
+                timestamp: new Date(currentTimestamp.getTime() + (delayIndex * 1000))
               });
+              delayIndex++;
             }
           }
-        });
+        }
+      } 
+      // Caso a resposta não seja um array, mas um objeto direto com campo reply
+      else if (responseData && typeof responseData === 'object') {
+        if (responseData.reply) {
+          messages.push({
+            id: Date.now().toString(),
+            text: formatMessage(responseData.reply),
+            sender: 'bot',
+            timestamp: currentTimestamp
+          });
+        }
+        // Caso tenha um array de replies
+        else if (responseData.replies && Array.isArray(responseData.replies)) {
+          responseData.replies.forEach((reply: string, index: number) => {
+            messages.push({
+              id: `${Date.now()}-${index}`,
+              text: formatMessage(reply),
+              sender: 'bot',
+              timestamp: new Date(currentTimestamp.getTime() + (index * 1000))
+            });
+          });
+        }
       }
     } catch (error) {
       console.error('Error sending message to webhook:', error);

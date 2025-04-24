@@ -29,20 +29,6 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isTyping, handleBut
     });
   };
 
-  // Function to format text with markdown-like syntax
-  const formatText = (text: string) => {
-    // Replace *bold* with <strong>bold</strong>
-    let formattedText = text.replace(/\*(.*?)\*/g, '<strong>$1</strong>');
-    
-    // Replace _italic_ with <em>italic</em>
-    formattedText = formattedText.replace(/_(.*?)_/g, '<em>$1</em>');
-    
-    // Replace line breaks with <br>
-    formattedText = formattedText.replace(/\n/g, '<br>');
-    
-    return formattedText;
-  };
-
   return (
     <div 
       className="flex-1 p-4 overflow-y-auto chat-scrollbar"
@@ -72,9 +58,9 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isTyping, handleBut
               </div>
             )}
             
-            <p 
+            <div 
               className="text-whatsapp-text whitespace-pre-line"
-              dangerouslySetInnerHTML={{ __html: formatText(message.text) }}
+              dangerouslySetInnerHTML={{ __html: message.text }}
             />
             
             {message.buttons && message.buttons.length > 0 && (
