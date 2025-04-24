@@ -6,6 +6,23 @@ export const usePWA = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const { toast } = useToast();
 
+  // Precisamos definir handleInstallClick antes de usá-lo no useEffect
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    
+    if (outcome === 'accepted') {
+      toast({
+        title: "Obrigado por instalar! 🎉",
+        description: "Agora você tem acesso rápido ao PrescrevaMe direto do seu dispositivo.",
+      });
+    }
+    
+    setDeferredPrompt(null);
+  };
+
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
@@ -31,23 +48,8 @@ export const usePWA = () => {
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     };
+  // Adicionamos handleInstallClick como dependência do useEffect para evitar warnings
   }, []);
-
-  const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
-
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    
-    if (outcome === 'accepted') {
-      toast({
-        title: "Obrigado por instalar! 🎉",
-        description: "Agora você tem acesso rápido ao PrescrevaMe direto do seu dispositivo.",
-      });
-    }
-    
-    setDeferredPrompt(null);
-  };
 
   return { handleInstallClick, canInstall: !!deferredPrompt };
 };
