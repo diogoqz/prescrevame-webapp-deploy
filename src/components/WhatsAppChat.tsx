@@ -151,8 +151,8 @@ const WhatsAppChat: React.FC = () => {
   };
 
   return (
-    <div className={`flex justify-center items-center ${isMobile ? 'h-[100dvh] w-screen p-0' : 'h-screen p-4'}`}>
-      <div className={`flex flex-col ${isMobile ? 'w-full h-full' : 'w-full max-w-md h-full'} rounded-lg overflow-hidden shadow-xl bg-whatsapp-bg`}>
+    <div className={`flex justify-center items-center ${isMobile ? 'h-[100dvh] w-screen p-0' : 'h-screen w-screen p-4'}`}>
+      <div className={`flex flex-col ${isMobile ? 'w-full h-full' : 'w-full max-w-md h-[calc(100vh-2rem)]'} rounded-lg overflow-hidden shadow-xl bg-whatsapp-bg`}>
         <ChatHeader user={user} onSignOut={signOut} />
         
         <MessageList 

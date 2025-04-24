@@ -1,7 +1,9 @@
-import React, { useRef, useState } from 'react';
+
+import React, { useRef, useState, useCallback } from 'react';
 import { Send, Image, Mic, MicOff, Eye, EyeOff, LogIn, X } from 'lucide-react';
 import { LoginStep } from '@/hooks/useChatAuth';
 import { Button } from '@/components/ui/button';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ChatInputProps {
   inputMessage: string;
@@ -39,31 +41,56 @@ export const ChatInput = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isFocused, setIsFocused] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const dropZoneRef = useRef<HTMLDivElement>(null);
 
   const openImageUpload = () => {
     fileInputRef.current?.click();
   };
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsDragging(true);
-  };
+  }, []);
 
-  const handleDragLeave = (e: React.DragEvent) => {
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault();
-    setIsDragging(false);
-  };
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+    
+    // Check if we're still within the drop zone
+    const rect = dropZoneRef.current?.getBoundingClientRect();
+    if (rect) {
+      const { clientX, clientY } = e;
+      if (
+        clientX < rect.left || 
+        clientX > rect.right || 
+        clientY < rect.top || 
+        clientY > rect.bottom
+      ) {
+        setIsDragging(false);
+      }
+    }
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     setIsDragging(false);
     
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) {
-      const event = { target: { files: [file] } } as unknown as React.ChangeEvent<HTMLInputElement>;
-      onImageUpload(event);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith('image/')) {
+        const event = { target: { files: [file] } } as unknown as React.ChangeEvent<HTMLInputElement>;
+        onImageUpload(event);
+      }
     }
-  };
+  }, [onImageUpload]);
 
   const removeImage = () => {
     if (fileInputRef.current) {
@@ -75,28 +102,61 @@ export const ChatInput = ({
 
   return (
     <div 
-      className="px-4 py-3 bg-whatsapp-header flex flex-col gap-3"
+      ref={dropZoneRef}
+      className="px-4 py-3 bg-whatsapp-header flex flex-col gap-3 relative"
       onDragOver={handleDragOver}
+      onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      {isDragging && (
-        <div className="absolute inset-0 bg-whatsapp-header/90 flex items-center justify-center z-50 border-2 border-dashed border-prescrevame/50">
-          <p className="text-prescrevame text-lg">Solte a imagem aqui</p>
-        </div>
-      )}
-      
-      {imagePreview && (
-        <div className="relative w-24 h-24 rounded-lg overflow-hidden border-2 border-prescrevame/50 animate-scale-up">
-          <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-          <button 
-            onClick={removeImage}
-            className="absolute top-1 right-1 bg-black/70 rounded-full p-1 text-white hover:bg-black"
+      <AnimatePresence>
+        {isDragging && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="absolute inset-0 bg-whatsapp-header/90 flex items-center justify-center z-50 border-2 border-dashed border-prescrevame/50 backdrop-blur-sm"
           >
-            <X size={16} />
-          </button>
-        </div>
-      )}
+            <motion.div
+              animate={{ 
+                scale: [1, 1.05, 1],
+                y: [0, -5, 0]
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              className="flex flex-col items-center gap-2"
+            >
+              <Image size={32} className="text-prescrevame" />
+              <p className="text-prescrevame text-lg font-medium">Solte a imagem aqui</p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
+      <AnimatePresence>
+        {imagePreview && (
+          <motion.div 
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            className="relative w-24 h-24 rounded-lg overflow-hidden border-2 border-prescrevame/50"
+          >
+            <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+            <Button 
+              onClick={removeImage}
+              size="icon"
+              variant="ghost"
+              className="absolute top-0 right-0 bg-black/70 rounded-full p-1 text-white hover:bg-black"
+            >
+              <X size={16} />
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       <div className="flex items-center gap-2">
         {!user && loginStep === 'idle' ? (
@@ -111,29 +171,14 @@ export const ChatInput = ({
           </div>
         ) : (
           <>
+            {/* Microfone sempre à esquerda */}
             <Button 
               variant="ghost"
               size="icon"
               onClick={onToggleRecording}
-              className={`rounded-full transition-all duration-300 ${isFocused ? 'scale-0 opacity-0 w-0' : 'text-whatsapp-textSecondary hover:text-prescrevame hover:bg-whatsapp-inputBg'}`}
+              className="rounded-full text-whatsapp-textSecondary hover:text-prescrevame hover:bg-whatsapp-inputBg transition-all duration-300"
             >
               {isRecording ? <MicOff size={24} /> : <Mic size={24} />}
-            </Button>
-            
-            <Button 
-              variant="ghost"
-              size="icon"
-              onClick={openImageUpload}
-              className={`rounded-full text-whatsapp-textSecondary hover:text-prescrevame hover:bg-whatsapp-inputBg transition-all duration-300 ${isFocused ? 'scale-0 opacity-0 w-0' : ''}`}
-            >
-              <Image size={24} />
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={onImageUpload}
-                accept="image/*"
-                className="hidden"
-              />
             </Button>
             
             <div className={`flex-1 relative transition-all duration-300 ${isFocused ? 'scale-105' : ''}`}>
@@ -158,25 +203,51 @@ export const ChatInput = ({
               )}
             </div>
             
-            {inputMessage.trim() || imagePreview ? (
-              <Button 
-                onClick={onSendMessage}
-                variant="ghost"
-                size="icon"
-                className="rounded-full text-prescrevame hover:bg-prescrevame/20 transition-all animate-scale-up"
-              >
-                <Send size={24} />
-              </Button>
-            ) : (
-              <Button 
-                onClick={onToggleRecording}
-                variant="ghost"
-                size="icon"
-                className="rounded-full text-prescrevame hover:bg-prescrevame/20 transition-all"
-              >
-                {isRecording ? <MicOff size={24} /> : <Mic size={24} />}
-              </Button>
-            )}
+            {/* Alternância entre botão de imagem e botão de enviar à direita */}
+            <AnimatePresence mode="wait">
+              {inputMessage.trim() || imagePreview ? (
+                <motion.div
+                  key="send"
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Button 
+                    onClick={onSendMessage}
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full text-prescrevame hover:bg-prescrevame/20 transition-all"
+                  >
+                    <Send size={24} />
+                  </Button>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="image"
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <Button 
+                    variant="ghost"
+                    size="icon"
+                    onClick={openImageUpload}
+                    className="rounded-full text-whatsapp-textSecondary hover:text-prescrevame hover:bg-whatsapp-inputBg"
+                  >
+                    <Image size={24} />
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={onImageUpload}
+                      accept="image/*"
+                      className="hidden"
+                    />
+                  </Button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </>
         )}
       </div>
