@@ -1,38 +1,36 @@
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PrescrevaMe - Chatbot</title>
-    <meta name="description" content="PrescrevaMe - Chatbot estilo WhatsApp" />
-    <meta name="author" content="Lovable" />
+    <meta name="description" content="PrescrevaMe - Assistente de prescrições médicas inteligente" />
+    <meta name="author" content="PrescrevaMe" />
 
     <meta property="og:title" content="PrescrevaMe - Chatbot" />
-    <meta property="og:description" content="Chatbot estilo WhatsApp PrescrevaMe" />
+    <meta property="og:description" content="Assistente de prescrições médicas inteligente" />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@lovable_dev" />
+    <meta name="twitter:site" content="@prescrevame" />
     <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    
+    <!-- Preload logo image -->
+    <link rel="preload" href="/lovable-uploads/f9d8ee9c-efab-4f5c-98b5-b08a1a131d86.png" as="image" />
   </head>
 
   <body>
-
     <div id="root"></div>
     <script>
-  setTimeout(() => {
-    const badge = document.getElementById('lovable-badge');
-    if (badge) badge.style.display = 'none';
-  }, 5000);
-</script>
+      setTimeout(() => {
+        const badge = document.getElementById('lovable-badge');
+        if (badge) badge.style.display = 'none';
+      }, 5000);
+    </script>
     <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
     <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
     <script type="module" src="/src/main.tsx"></script>
-
-
-
   </body>
-    
 </html>

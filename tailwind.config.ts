@@ -63,11 +63,19 @@ export default {
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
 				},
+				// PrescrevaMe theme colors
+				prescrevame: {
+					light: '#7de2ac',
+					DEFAULT: '#57D789',
+					dark: '#00A86B',
+					darkest: '#008C59',
+					text: '#0D1418',
+				},
 				// WhatsApp dark theme colors
 				whatsapp: {
 					bg: '#0D1418',
 					header: '#1F2C34',
-					accent: '#00A884',
+					accent: '#00A86B', // Changed to prescrevame green
 					bubbleSent: '#005C4B',
 					bubbleReceived: '#202C33',
 					text: '#E9EDF0',
@@ -108,6 +116,26 @@ export default {
 				'fade-in': {
 					'0%': { opacity: '0' },
 					'100%': { opacity: '1' }
+				},
+				'slide-up': {
+					'0%': { transform: 'translateY(100%)' },
+					'100%': { transform: 'translateY(0)' }
+				},
+				'slide-down': {
+					'0%': { transform: 'translateY(-100%)' },
+					'100%': { transform: 'translateY(0)' }
+				},
+				'scale-up': {
+					'0%': { transform: 'scale(0.95)', opacity: '0' },
+					'100%': { transform: 'scale(1)', opacity: '1' }
+				},
+				'rotate-in': {
+					'0%': { transform: 'rotate(-10deg) scale(0.95)', opacity: '0' },
+					'100%': { transform: 'rotate(0) scale(1)', opacity: '1' }
+				},
+				'glow': {
+					'0%, 100%': { boxShadow: '0 0 10px rgba(87, 215, 137, 0.5)' },
+					'50%': { boxShadow: '0 0 20px rgba(87, 215, 137, 0.8)' }
 				}
 			},
 			animation: {
@@ -117,7 +145,12 @@ export default {
 				'typing-dot-1': 'typing-dot 1.4s infinite',
 				'typing-dot-2': 'typing-dot 1.4s 0.2s infinite',
 				'typing-dot-3': 'typing-dot 1.4s 0.4s infinite',
-				'fade-in': 'fade-in 0.3s ease-out'
+				'fade-in': 'fade-in 0.3s ease-out',
+				'slide-up': 'slide-up 0.4s ease-out',
+				'slide-down': 'slide-down 0.4s ease-out',
+				'scale-up': 'scale-up 0.3s ease-out',
+				'rotate-in': 'rotate-in 0.5s ease-out',
+				'glow': 'glow 2s infinite'
 			}
 		}
 	},

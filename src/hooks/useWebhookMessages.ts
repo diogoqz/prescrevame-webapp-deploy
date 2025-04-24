@@ -1,139 +1,93 @@
-
 import { useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { Message } from '@/types/Message';
 
-interface Message {
-  id: string;
-  text: string;
-  sender: 'user' | 'bot';
-  timestamp: Date;
-  buttons?: MessageButton[];
-  image?: string;
-}
-
-interface MessageButton {
-  id: string;
-  label: string;
-}
-
+// Modificamos a função para enviar imagens como base64
 export const useWebhookMessages = () => {
-  const { toast } = useToast();
   const [isTyping, setIsTyping] = useState(false);
 
-  const processWebhookResponse = (responseData: any): string[] => {
-    console.log('Processing webhook response:', responseData);
-    const replies: string[] = [];
+  const sendMessageToWebhook = async (formData: FormData) => {
+    setIsTyping(true);
+    const messages: Message[] = [];
 
     try {
-      // Caso 1: Resposta direta do webhook sem array
-      if (!Array.isArray(responseData)) {
-        // Se tiver o campo "reply", é uma única mensagem
-        if (responseData.reply) {
-          replies.push(responseData.reply);
-        }
-        // Se tiver o campo "replies", são múltiplas mensagens
-        else if (responseData.replies && Array.isArray(responseData.replies)) {
-          responseData.replies.forEach((reply: string) => {
-            replies.push(reply);
-          });
-        }
-      } 
-      // Caso 2: Array de resultados do webhook
-      else if (Array.isArray(responseData)) {
-        responseData.forEach(item => {
-          if (item.result) {
-            try {
-              // Tentar fazer parse do result se for string
-              const parsedResult = typeof item.result === 'string' 
-                ? JSON.parse(item.result) 
-                : item.result;
-              
-              // Caso 2.1: campo "reply" em parsedResult
-              if (parsedResult.reply) {
-                replies.push(parsedResult.reply);
-              }
-              // Caso 2.2: campo "replies" em parsedResult
-              else if (parsedResult.replies && Array.isArray(parsedResult.replies)) {
-                parsedResult.replies.forEach((reply: string) => {
-                  replies.push(reply);
-                });
-              }
-              // Caso 2.3: parsedResult é uma string
-              else if (typeof parsedResult === 'string') {
-                replies.push(parsedResult);
-              }
-            } catch (e) {
-              console.error('Erro ao processar o resultado:', e);
-              // Se não conseguir fazer parse, usar o item.result diretamente se for string
-              if (typeof item.result === 'string') {
-                try {
-                  // Tenta fazer parse diretamente do result
-                  const directResult = JSON.parse(item.result);
-                  if (directResult.reply) {
-                    replies.push(directResult.reply);
-                  } else if (directResult.replies && Array.isArray(directResult.replies)) {
-                    directResult.replies.forEach((reply: string) => {
-                      replies.push(reply);
-                    });
-                  }
-                } catch (innerError) {
-                  // Se falhar em fazer parse como JSON, use como texto puro
-                  replies.push(item.result);
-                }
-              }
-            }
-          }
+      // Converter a imagem para base64, se existir
+      let imageBase64: string | null = null;
+      const imageFile = formData.get('image') as File | null;
+
+      if (imageFile) {
+        const reader = new FileReader();
+        imageBase64 = await new Promise<string>((resolve) => {
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(imageFile);
         });
       }
 
-      if (replies.length === 0) {
-        replies.push('Não foi possível processar a resposta.');
-      }
-    } catch (error) {
-      console.error('Error processing webhook response:', error);
-      replies.push('Erro ao processar a resposta.');
-    }
+      // Atualizar o objeto de dados para incluir a imagem como base64
+      const data = {
+        message: formData.get('message'),
+        image: imageBase64
+      };
 
-    return replies;
-  };
+      console.log('Sending data to webhook:', data);
 
-  const sendMessageToWebhook = async (formData: FormData): Promise<Message[]> => {
-    setIsTyping(true);
-    try {
-      const response = await fetch('https://app-n8n.icogub.easypanel.host/webhook/f54cf431-4260-4e9f-ac60-c7d5feab9c35', {
+      const response = await fetch('https://api.prescrevame.com.br/webhook', {
         method: 'POST',
-        body: formData
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
       });
-      
+
       if (!response.ok) {
-        throw new Error('Network response was not ok');
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
       const responseData = await response.json();
-      const replies = processWebhookResponse(responseData);
-      
-      return replies.map((reply, index) => ({
-        id: Date.now().toString() + '-' + index,
-        text: reply,
+
+      if (responseData && Array.isArray(responseData)) {
+        responseData.forEach(item => {
+          if (typeof item === 'string') {
+            messages.push({
+              id: Date.now().toString(),
+              text: item,
+              sender: 'bot',
+              timestamp: new Date()
+            });
+          } else if (typeof item === 'object' && item !== null && 'text' in item) {
+            messages.push({
+              id: Date.now().toString(),
+              text: String(item.text),
+              sender: 'bot',
+              timestamp: new Date()
+            });
+          }
+        });
+      } else {
+        console.warn('Resposta do webhook não está no formato esperado:', responseData);
+        messages.push({
+          id: Date.now().toString(),
+          text: "Resposta do servidor inválida.",
+          sender: 'bot',
+          timestamp: new Date()
+        });
+      }
+
+    } catch (error) {
+      console.error('Error sending message to webhook:', error);
+      messages.push({
+        id: Date.now().toString(),
+        text: "Ocorreu um erro ao enviar sua mensagem. Por favor, tente novamente.",
         sender: 'bot',
         timestamp: new Date()
-      }));
-
-    } catch (error) {
-      console.error('Error sending message:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível enviar sua mensagem. Tente novamente.",
-        variant: "destructive"
       });
-      return [];
     } finally {
-      setIsTyping(false);
+      setTimeout(() => {
+        setIsTyping(false);
+      }, 500);
     }
+
+    return messages;
   };
 
-  return {
-    isTyping,
-    sendMessageToWebhook
-  };
+  return { isTyping, sendMessageToWebhook };
 };
