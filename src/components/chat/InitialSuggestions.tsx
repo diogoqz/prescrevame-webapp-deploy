@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 
 interface InitialSuggestionsProps {
-  suggestions: Array<{
-    title: string;
-    examples: string[];
+  suggestions: ReadonlyArray<{
+    readonly title: string;
+    readonly examples: ReadonlyArray<string>;
   }>;
   onSuggestionClick: (suggestion: string) => void;
 }
