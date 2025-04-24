@@ -7,6 +7,7 @@ import { ChatInput } from './chat/ChatInput';
 import MessageList from './chat/MessageList';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Message } from '@/types/Message';
+import { AppConfig } from '@/config/app.config';
 
 const WhatsAppChat: React.FC = () => {
   const isMobile = useIsMobile();
@@ -151,7 +152,7 @@ const WhatsAppChat: React.FC = () => {
 
   return (
     <div className={`flex justify-center items-center ${isMobile ? 'h-[100dvh] w-screen p-0' : 'h-screen w-screen p-4'}`}>
-      <div className={`flex flex-col ${isMobile ? 'w-full h-full' : 'w-full max-w-md h-full'} rounded-lg overflow-hidden shadow-xl bg-whatsapp-bg`}>
+      <div className={`flex flex-col ${isMobile ? 'w-full h-full' : `w-full max-w-${AppConfig.chat.desktop.maxWidth} h-full`} rounded-lg overflow-hidden shadow-xl bg-whatsapp-bg`}>
         <ChatHeader user={user} onSignOut={signOut} />
         
         <MessageList 
