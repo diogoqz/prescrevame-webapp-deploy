@@ -1,4 +1,3 @@
-
 export const AppConfig = {
   // Company Info
   company: {
@@ -71,16 +70,6 @@ export const AppConfig = {
     },
   },
 
-  // SEO Configuration
-  seo: {
-    title: "PrescrevaMe - Assistente Médico",
-    description: "Sua plataforma de assistência médica inteligente",
-    author: "PrescrevaMe",
-    keywords: ["medical", "healthcare", "productivity", "ai", "assistant"],
-    ogImage: "/lovable-uploads/f9d8ee9c-efab-4f5c-98b5-b08a1a131d86.png",
-    twitterHandle: "@prescrevame",
-  },
-
   // Error Messages
   errors: {
     auth: {
@@ -101,4 +90,3 @@ export const AppConfig = {
     },
   },
 } as const;
-
