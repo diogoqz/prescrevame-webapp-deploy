@@ -1,6 +1,5 @@
-
 import React, { useRef, useState } from 'react';
-import { Send, Paperclip, Mic, MicOff, Image, Eye, EyeOff, LogIn, X } from 'lucide-react';
+import { Send, Image, Mic, MicOff, Eye, EyeOff, LogIn, X } from 'lucide-react';
 import { LoginStep } from '@/hooks/useChatAuth';
 import { Button } from '@/components/ui/button';
 
@@ -39,23 +38,54 @@ export const ChatInput = ({
 }: ChatInputProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isFocused, setIsFocused] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   const openImageUpload = () => {
     fileInputRef.current?.click();
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const event = { target: { files: [file] } } as unknown as React.ChangeEvent<HTMLInputElement>;
+      onImageUpload(event);
+    }
   };
 
   const removeImage = () => {
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-    // Need to call a function to clear the image preview in the parent component
-    // This would be implemented in WhatsAppChat.tsx with a new prop
     const event = new Event('input', { bubbles: true });
     if (fileInputRef.current) fileInputRef.current.dispatchEvent(event);
   };
 
   return (
-    <div className="px-4 py-3 bg-whatsapp-header flex flex-col gap-3">
+    <div 
+      className="px-4 py-3 bg-whatsapp-header flex flex-col gap-3"
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {isDragging && (
+        <div className="absolute inset-0 bg-whatsapp-header/90 flex items-center justify-center z-50 border-2 border-dashed border-prescrevame/50">
+          <p className="text-prescrevame text-lg">Solte a imagem aqui</p>
+        </div>
+      )}
+      
       {imagePreview && (
         <div className="relative w-24 h-24 rounded-lg overflow-hidden border-2 border-prescrevame/50 animate-scale-up">
           <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
@@ -84,8 +114,17 @@ export const ChatInput = ({
             <Button 
               variant="ghost"
               size="icon"
-              onClick={openImageUpload}
+              onClick={onToggleRecording}
               className={`rounded-full transition-all duration-300 ${isFocused ? 'scale-0 opacity-0 w-0' : 'text-whatsapp-textSecondary hover:text-prescrevame hover:bg-whatsapp-inputBg'}`}
+            >
+              {isRecording ? <MicOff size={24} /> : <Mic size={24} />}
+            </Button>
+            
+            <Button 
+              variant="ghost"
+              size="icon"
+              onClick={openImageUpload}
+              className={`rounded-full text-whatsapp-textSecondary hover:text-prescrevame hover:bg-whatsapp-inputBg transition-all duration-300 ${isFocused ? 'scale-0 opacity-0 w-0' : ''}`}
             >
               <Image size={24} />
               <input
@@ -95,14 +134,6 @@ export const ChatInput = ({
                 accept="image/*"
                 className="hidden"
               />
-            </Button>
-            
-            <Button 
-              variant="ghost"
-              size="icon"
-              className={`rounded-full text-whatsapp-textSecondary hover:text-prescrevame hover:bg-whatsapp-inputBg transition-all duration-300 ${isFocused ? 'scale-0 opacity-0 w-0' : ''}`}
-            >
-              <Paperclip size={24} />
             </Button>
             
             <div className={`flex-1 relative transition-all duration-300 ${isFocused ? 'scale-105' : ''}`}>
