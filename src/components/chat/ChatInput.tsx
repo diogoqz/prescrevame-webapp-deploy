@@ -1,8 +1,9 @@
-import React, { useRef, useState, useCallback } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { Send, Mic, Paperclip, Image, X, MicOff, Eye, EyeOff, LogIn } from 'lucide-react';
 import { LoginStep } from '@/hooks/useChatAuth';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
+import { AppConfig } from '@/config/app.config';
 
 interface ChatInputProps {
   inputMessage: string;
@@ -37,6 +38,8 @@ export const ChatInput = ({
   user,
   handleButtonClick
 }: ChatInputProps) => {
+  const [suggestions, setSuggestions] = useState<Array<{ term: string; description: string }>>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isFocused, setIsFocused] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -98,6 +101,26 @@ export const ChatInput = ({
     if (fileInputRef.current) fileInputRef.current.dispatchEvent(event);
   };
 
+  useEffect(() => {
+    if (!inputMessage || !user) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    const matchedTerms = AppConfig.chat.commonTerms.filter(item =>
+      item.term.toLowerCase().includes(inputMessage.toLowerCase())
+    );
+
+    setSuggestions(matchedTerms);
+    setShowSuggestions(matchedTerms.length > 0);
+  }, [inputMessage, user]);
+
+  const handleSuggestionClick = (term: string) => {
+    setInputMessage(term);
+    setShowSuggestions(false);
+  };
+
   return (
     <div 
       ref={dropZoneRef}
@@ -156,7 +179,7 @@ export const ChatInput = ({
         )}
       </AnimatePresence>
       
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 relative">
         {!user && loginStep === 'idle' ? (
           <div className="flex-1 text-center">
             <Button
@@ -169,7 +192,6 @@ export const ChatInput = ({
           </div>
         ) : (
           <>
-            {/* Mic icon first */}
             <Button 
               variant="ghost"
               size="icon"
@@ -179,7 +201,6 @@ export const ChatInput = ({
               {isRecording ? <MicOff size={24} /> : <Mic size={24} />}
             </Button>
             
-            {/* Paperclip icon second */}
             <Button 
               variant="ghost"
               size="icon"
@@ -203,11 +224,30 @@ export const ChatInput = ({
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyDown={onKeyDown}
                 onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
+                onBlur={() => {
+                  setIsFocused(false);
+                  setTimeout(() => setShowSuggestions(false), 200);
+                }}
                 placeholder={loginStep === 'password' ? 'Digite sua senha' : 'Digite uma mensagem'}
                 className="w-full px-4 py-2 rounded-full bg-whatsapp-inputBg text-whatsapp-text placeholder-whatsapp-textSecondary focus:outline-none focus:ring-1 focus:ring-prescrevame transition-all"
                 {...(loginStep === 'password' ? { type: showPassword ? 'text' : 'password' } : {})}
               />
+              
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute bottom-full mb-2 w-full bg-whatsapp-header rounded-lg shadow-lg border border-whatsapp-accent/10 overflow-hidden">
+                  {suggestions.map((suggestion, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleSuggestionClick(suggestion.term)}
+                      className="w-full px-4 py-2 text-left hover:bg-whatsapp-accent/10 flex flex-col"
+                    >
+                      <span className="text-whatsapp-text">{suggestion.term}</span>
+                      <span className="text-xs text-whatsapp-textSecondary">{suggestion.description}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              
               {loginStep === 'password' && (
                 <button
                   onClick={() => setShowPassword(!showPassword)}
@@ -218,7 +258,6 @@ export const ChatInput = ({
               )}
             </div>
             
-            {/* Image/Send button on the right */}
             <AnimatePresence mode="wait">
               {inputMessage.trim() || imagePreview ? (
                 <motion.div

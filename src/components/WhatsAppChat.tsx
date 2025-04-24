@@ -35,15 +35,20 @@ const WhatsAppChat: React.FC = () => {
       {
         id: '1',
         text: user 
-          ? 'Olá! Eu sou o PrescrevaMe. Como posso te ajudar hoje?' 
-          : 'Bem-vindo ao PrescrevaMe! Por favor, faça login ou cadastre-se para continuar.',
+          ? AppConfig.chat.welcome.authenticated 
+          : AppConfig.chat.welcome.unauthenticated,
         sender: 'bot',
         timestamp: new Date(),
-        buttons: !user ? [
-          { id: 'login', label: 'Login' },
-          { id: 'signup', label: 'Cadastro' },
-          { id: 'info', label: 'Mais Informações' }
-        ] : undefined
+        buttons: !user 
+          ? [
+              { id: 'login', label: 'Login' },
+              { id: 'signup', label: 'Cadastro' },
+              { id: 'info', label: 'Mais Informações' }
+            ]
+          : AppConfig.chat.quickCommands.map(cmd => ({
+              id: cmd.id,
+              label: cmd.label
+            }))
       }
     ]);
   }, [user]);
@@ -58,6 +63,11 @@ const WhatsAppChat: React.FC = () => {
     
     const messageText = inputMessage.trim();
     setInputMessage('');
+
+    setMessages(prev => prev.map(msg => ({
+      ...msg,
+      buttons: msg.sender === 'bot' ? undefined : msg.buttons
+    })));
 
     const newUserMessage: Message = {
       id: Date.now().toString(),

@@ -27,13 +27,52 @@ export const AppConfig = {
   // Chat Configuration
   chat: {
     desktop: {
-      maxWidth: "lg", // Tailwind max-w classes: sm, md, lg, xl
-      padding: "4", // Tailwind p classes: 0-16
+      maxWidth: "lg",
+      padding: "4",
     },
     welcome: {
       authenticated: "Olá! Eu sou o PrescrevaMe. Como posso te ajudar hoje?",
       unauthenticated: "Bem-vindo ao PrescrevaMe! Por favor, faça login ou cadastre-se para continuar.",
     },
+    quickCommands: [
+      {
+        id: 'lista',
+        label: 'LISTA',
+        description: 'Ver prescrições disponíveis'
+      },
+      {
+        id: 'doses',
+        label: 'DOSES',
+        description: 'Consultar medicações'
+      },
+      {
+        id: 'imc',
+        label: 'IMC',
+        description: 'Calcular o IMC'
+      }
+    ],
+    commonTerms: [
+      {
+        term: 'Prescrever',
+        description: 'Criar nova prescrição'
+      },
+      {
+        term: 'Receita',
+        description: 'Gerar receita médica'
+      },
+      {
+        term: 'Dosagem',
+        description: 'Consultar dosagem de medicamento'
+      },
+      {
+        term: 'Atestado',
+        description: 'Gerar atestado médico'
+      },
+      {
+        term: 'Exames',
+        description: 'Solicitar exames'
+      }
+    ],
     buttons: {
       login: "Login",
       signup: "Cadastro",
