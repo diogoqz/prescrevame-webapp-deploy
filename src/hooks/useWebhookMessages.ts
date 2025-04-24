@@ -30,7 +30,7 @@ export const useWebhookMessages = () => {
 
       console.log('Sending data to webhook:', data);
 
-      const response = await fetch('https://api.prescrevame.com.br/webhook', {
+      const response = await fetch('https://app-n8n.icogub.easypanel.host/webhook/f54cf431-4260-4e9f-ac60-c7d5feab9c35', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
