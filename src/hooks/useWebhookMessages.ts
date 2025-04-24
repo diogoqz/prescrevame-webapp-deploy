@@ -6,8 +6,12 @@ export const useWebhookMessages = () => {
   const [isTyping, setIsTyping] = useState(false);
 
   const formatMessage = (text: string): string => {
-    // Replace escaped characters with actual characters
-    return text.replace(/\\n/g, '\n').replace(/\\"/g, '"');
+    // Replace escaped characters and format markdown-style text
+    return text
+      .replace(/\\n/g, '\n')
+      .replace(/\\"/g, '"')
+      .replace(/\*([^*]+)\*/g, '<strong>$1</strong>')
+      .replace(/_([^_]+)_/g, '<em>$1</em>');
   };
 
   const sendMessageToWebhook = async (formData: FormData) => {
@@ -50,7 +54,6 @@ export const useWebhookMessages = () => {
       const responseData = await response.json();
       console.log('Response from webhook:', responseData);
 
-      // Create a timestamp for the base message
       const currentTimestamp = new Date();
       
       if (responseData && Array.isArray(responseData)) {
@@ -60,7 +63,6 @@ export const useWebhookMessages = () => {
               const parsedResult = JSON.parse(item.result);
               
               if (parsedResult.reply) {
-                // Single reply format
                 messages.push({
                   id: `${Date.now()}-${index}`,
                   text: formatMessage(parsedResult.reply),
@@ -68,13 +70,12 @@ export const useWebhookMessages = () => {
                   timestamp: currentTimestamp
                 });
               } else if (parsedResult.replies && Array.isArray(parsedResult.replies)) {
-                // Multiple replies format - add each reply as a separate message with a time delay
                 parsedResult.replies.forEach((reply: string, replyIndex: number) => {
                   messages.push({
                     id: `${Date.now()}-${index}-${replyIndex}`,
                     text: formatMessage(reply),
                     sender: 'bot',
-                    timestamp: new Date(currentTimestamp.getTime() + (replyIndex * 1000)) // 1 second interval between messages
+                    timestamp: new Date(currentTimestamp.getTime() + (replyIndex * 1000))
                   });
                 });
               }
@@ -90,7 +91,6 @@ export const useWebhookMessages = () => {
           }
         });
       }
-
     } catch (error) {
       console.error('Error sending message to webhook:', error);
       messages.push({
