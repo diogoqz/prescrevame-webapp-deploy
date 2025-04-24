@@ -27,78 +27,13 @@ export const AppConfig = {
   // Chat Configuration
   chat: {
     desktop: {
-      maxWidth: "lg",
-      padding: "4",
+      maxWidth: "lg", // Tailwind max-w classes: sm, md, lg, xl
+      padding: "4", // Tailwind p classes: 0-16
     },
     welcome: {
       authenticated: "Olá! Eu sou o PrescrevaMe. Como posso te ajudar hoje?",
       unauthenticated: "Bem-vindo ao PrescrevaMe! Por favor, faça login ou cadastre-se para continuar.",
     },
-    initialSuggestions: [
-      {
-        title: "Prescrever medicação",
-        examples: [
-          "Prescrever dipirona 500mg",
-          "Criar prescrição de ibuprofeno",
-          "Nova prescrição de amoxicilina"
-        ]
-      },
-      {
-        title: "Consultar doses",
-        examples: [
-          "Qual a dose de amoxicilina para criança?",
-          "Dosagem de dipirona infantil",
-          "Dose máxima de ibuprofeno"
-        ]
-      },
-      {
-        title: "Gerar documentos",
-        examples: [
-          "Criar atestado médico",
-          "Gerar pedido de exame",
-          "Nova receita médica"
-        ]
-      }
-    ],
-    quickCommands: [
-      {
-        id: 'lista',
-        label: 'LISTA',
-        description: 'Ver prescrições disponíveis'
-      },
-      {
-        id: 'doses',
-        label: 'DOSES',
-        description: 'Consultar medicações'
-      },
-      {
-        id: 'imc',
-        label: 'IMC',
-        description: 'Calcular o IMC'
-      }
-    ],
-    commonTerms: [
-      {
-        term: 'Prescrever',
-        description: 'Criar nova prescrição'
-      },
-      {
-        term: 'Receita',
-        description: 'Gerar receita médica'
-      },
-      {
-        term: 'Dosagem',
-        description: 'Consultar dosagem de medicamento'
-      },
-      {
-        term: 'Atestado',
-        description: 'Gerar atestado médico'
-      },
-      {
-        term: 'Exames',
-        description: 'Solicitar exames'
-      }
-    ],
     buttons: {
       login: "Login",
       signup: "Cadastro",
