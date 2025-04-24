@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { Message } from '@/types/Message';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useWebhookMessages = () => {
   const [isTyping, setIsTyping] = useState(false);
@@ -19,6 +20,9 @@ export const useWebhookMessages = () => {
     const messages: Message[] = [];
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const userEmail = session?.user?.email;
+
       // Converter a imagem para base64, se existir
       let imageBase64: string | null = null;
       const imageFile = formData.get('image') as File | null;
@@ -31,10 +35,11 @@ export const useWebhookMessages = () => {
         });
       }
 
-      // Atualizar o objeto de dados para incluir a imagem como base64
+      // Atualizar o objeto de dados para incluir a imagem como base64 e o sessionId
       const data = {
         message: formData.get('message'),
-        image: imageBase64
+        image: imageBase64,
+        sessionId: userEmail || 'anonymous'
       };
 
       console.log('Sending data to webhook:', data);
