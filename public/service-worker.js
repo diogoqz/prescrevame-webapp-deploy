@@ -1,10 +1,8 @@
-
-const CACHE_NAME = 'prescrevame-cache-v2'; // Incremented version
+const CACHE_NAME = 'prescrevame-cache-v3'; // Incremented version
 const urlsToCache = [
   '/',
   '/index.html',
   '/manifest.json',
-  // Image may be accessible through a different path in production
   '/lovable-uploads/f9d8ee9c-efab-4f5c-98b5-b08a1a131d86.png'
 ];
 
@@ -22,6 +20,42 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  // Special handling for images
+  if (event.request.url.includes('/lovable-uploads/')) {
+    event.respondWith(
+      caches.match(event.request)
+        .then(response => {
+          // Return cached response if available
+          if (response) {
+            return response;
+          }
+          
+          // Otherwise try to fetch it
+          return fetch(event.request)
+            .then(response => {
+              // If response is valid, cache it
+              if (!response || response.status !== 200 || response.type !== 'basic') {
+                return response;
+              }
+              
+              const responseToCache = response.clone();
+              caches.open(CACHE_NAME)
+                .then(cache => {
+                  cache.put(event.request, responseToCache);
+                });
+              
+              return response;
+            })
+            .catch(() => {
+              // Return a fallback image if fetch fails
+              return new Response('', {status: 404});
+            });
+        })
+    );
+    return;
+  }
+  
+  // Standard fetching for other requests
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
@@ -48,10 +82,9 @@ self.addEventListener('fetch', (event) => {
         );
       })
       .catch(() => {
-        // If both cache and network fail, you could return a fallback
-        if (event.request.url.indexOf('/lovable-uploads/') !== -1) {
-          // Return a fallback for images
-          return new Response('', {status: 404});
+        // If both cache and network fail, provide a generic fallback
+        if (event.request.url.endsWith('.html')) {
+          return caches.match('/');
         }
       })
   );

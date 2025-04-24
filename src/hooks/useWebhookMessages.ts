@@ -1,7 +1,7 @@
+
 import { useState } from 'react';
 import { Message } from '@/types/Message';
 
-// Modificamos a função para enviar imagens como base64
 export const useWebhookMessages = () => {
   const [isTyping, setIsTyping] = useState(false);
 
@@ -45,28 +45,57 @@ export const useWebhookMessages = () => {
       const responseData = await response.json();
 
       if (responseData && Array.isArray(responseData)) {
-        responseData.forEach(item => {
+        // Create a timestamp to ensure messages have unique IDs but appear at the same time
+        const currentTimestamp = new Date();
+        
+        responseData.forEach((item, index) => {
           if (typeof item === 'string') {
             messages.push({
-              id: Date.now().toString(),
+              id: `${Date.now()}-${index}`,
               text: item,
               sender: 'bot',
-              timestamp: new Date()
+              timestamp: currentTimestamp
             });
-          } else if (typeof item === 'object' && item !== null && 'text' in item) {
-            messages.push({
-              id: Date.now().toString(),
-              text: String(item.text),
-              sender: 'bot',
-              timestamp: new Date()
-            });
+          } else if (typeof item === 'object' && item !== null) {
+            // Handle different possible object structures
+            if ('text' in item) {
+              messages.push({
+                id: `${Date.now()}-${index}`,
+                text: String(item.text),
+                sender: 'bot',
+                timestamp: currentTimestamp
+              });
+            } else if ('message' in item) {
+              messages.push({
+                id: `${Date.now()}-${index}`,
+                text: String(item.message),
+                sender: 'bot',
+                timestamp: currentTimestamp
+              });
+            } else {
+              // If structure is unknown, convert to string
+              messages.push({
+                id: `${Date.now()}-${index}`,
+                text: JSON.stringify(item),
+                sender: 'bot',
+                timestamp: currentTimestamp
+              });
+            }
           }
+        });
+      } else if (responseData && typeof responseData === 'object') {
+        // Handle case where response is a single object instead of array
+        messages.push({
+          id: Date.now().toString(),
+          text: responseData.text || responseData.message || JSON.stringify(responseData),
+          sender: 'bot',
+          timestamp: new Date()
         });
       } else {
         console.warn('Resposta do webhook não está no formato esperado:', responseData);
         messages.push({
           id: Date.now().toString(),
-          text: "Resposta do servidor inválida.",
+          text: "Resposta do servidor recebida, mas em formato não esperado.",
           sender: 'bot',
           timestamp: new Date()
         });

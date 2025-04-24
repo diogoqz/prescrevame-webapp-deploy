@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -58,6 +59,10 @@ const Auth = () => {
     }
   };
 
+  const handleSupport = () => {
+    window.open('https://api.whatsapp.com/send?phone=556392437559&text=SUPORTE', '_blank');
+  };
+
   return (
     <div className="h-[100dvh] w-screen flex flex-col justify-center items-center bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden">
       <div className="w-full max-w-md relative z-10">
@@ -94,7 +99,7 @@ const Auth = () => {
           onSlideChange={(swiper) => setActiveStep(swiper.activeIndex)}
         >
           <SwiperSlide>
-            <Card className="backdrop-blur-xl bg-white/10 border-purple-500/20 animate-rotate-in shadow-[0_8px_32px_rgba(31,38,135,0.37)]">
+            <Card className="backdrop-blur-xl bg-white/20 border-purple-500/20 animate-rotate-in shadow-[0_8px_32px_rgba(31,38,135,0.37)]">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   {authMode === 'login' ? (
@@ -126,7 +131,7 @@ const Auth = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      className="bg-white/5 border-purple-500/20 text-white placeholder:text-gray-400 focus:border-purple-500/50"
+                      className="bg-white/10 border-purple-500/20 text-white placeholder:text-gray-400 focus:border-purple-500/50"
                       placeholder="seuemail@exemplo.com"
                     />
                   </div>
@@ -140,7 +145,7 @@ const Auth = () => {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
-                        className="bg-white/5 border-purple-500/20 text-white placeholder:text-gray-400 focus:border-purple-500/50 pr-10"
+                        className="bg-white/10 border-purple-500/20 text-white placeholder:text-gray-400 focus:border-purple-500/50 pr-10"
                         placeholder="********"
                       />
                       <button
@@ -195,7 +200,7 @@ const Auth = () => {
                   </Button>
                   <Button 
                     variant="ghost"
-                    onClick={() => window.open('https://api.whatsapp.com/send?phone=556392437559&text=SUPORTE', '_blank')}
+                    onClick={handleSupport}
                     className="flex-1 text-gray-300 hover:text-white hover:bg-white/5"
                   >
                     Suporte <MessageCircle className="ml-2 h-4 w-4" />
@@ -206,7 +211,7 @@ const Auth = () => {
           </SwiperSlide>
 
           <SwiperSlide>
-            <Card className="backdrop-blur-xl bg-white/10 border-purple-500/20 animate-slide-up">
+            <Card className="backdrop-blur-xl bg-white/20 border-purple-500/20 animate-slide-up">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Info className="h-5 w-5 text-purple-400" /> 
