@@ -3,7 +3,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface ChatSuggestionsProps {
-  suggestions: Array<{ term: string; description: string }>;
+  suggestions: ReadonlyArray<{ readonly term: string; readonly description: string }>;
   showSuggestions: boolean;
   onSuggestionClick: (term: string) => void;
 }
