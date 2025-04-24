@@ -43,53 +43,80 @@ export const useWebhookMessages = () => {
       }
 
       const responseData = await response.json();
+      console.log('Response from webhook:', responseData);
 
+      // Create a timestamp to ensure messages have unique IDs but appear at the same time
+      const currentTimestamp = new Date();
+      
+      // Process the response data
       if (responseData && Array.isArray(responseData)) {
-        // Create a timestamp to ensure messages have unique IDs but appear at the same time
-        const currentTimestamp = new Date();
-        
+        // Handle array of response objects
         responseData.forEach((item, index) => {
-          if (typeof item === 'string') {
+          if (typeof item === 'object' && item !== null && item.result) {
+            try {
+              // Parse the result string to get the JSON content
+              const parsedResult = JSON.parse(item.result);
+              
+              // Handle single reply format: { reply: "message" }
+              if (parsedResult.reply) {
+                messages.push({
+                  id: `${Date.now()}-${index}`,
+                  text: parsedResult.reply,
+                  sender: 'bot',
+                  timestamp: currentTimestamp
+                });
+              }
+              // Handle multiple replies format: { replies: ["message1", "message2"] }
+              else if (parsedResult.replies && Array.isArray(parsedResult.replies)) {
+                parsedResult.replies.forEach((reply: string, replyIndex: number) => {
+                  messages.push({
+                    id: `${Date.now()}-${index}-${replyIndex}`,
+                    text: reply,
+                    sender: 'bot',
+                    timestamp: new Date(currentTimestamp.getTime() + (replyIndex * 1000)) // 1 second interval between messages
+                  });
+                });
+              } else {
+                // Fallback for other structures
+                messages.push({
+                  id: `${Date.now()}-${index}`,
+                  text: JSON.stringify(parsedResult),
+                  sender: 'bot',
+                  timestamp: currentTimestamp
+                });
+              }
+            } catch (err) {
+              console.error('Error parsing result JSON:', err, item.result);
+              messages.push({
+                id: `${Date.now()}-${index}`,
+                text: typeof item.result === 'string' ? item.result : JSON.stringify(item.result),
+                sender: 'bot',
+                timestamp: currentTimestamp
+              });
+            }
+          } else if (typeof item === 'string') {
             messages.push({
               id: `${Date.now()}-${index}`,
               text: item,
               sender: 'bot',
               timestamp: currentTimestamp
             });
-          } else if (typeof item === 'object' && item !== null) {
-            // Handle different possible object structures
-            if ('text' in item) {
-              messages.push({
-                id: `${Date.now()}-${index}`,
-                text: String(item.text),
-                sender: 'bot',
-                timestamp: currentTimestamp
-              });
-            } else if ('message' in item) {
-              messages.push({
-                id: `${Date.now()}-${index}`,
-                text: String(item.message),
-                sender: 'bot',
-                timestamp: currentTimestamp
-              });
-            } else {
-              // If structure is unknown, convert to string
-              messages.push({
-                id: `${Date.now()}-${index}`,
-                text: JSON.stringify(item),
-                sender: 'bot',
-                timestamp: currentTimestamp
-              });
-            }
+          } else {
+            messages.push({
+              id: `${Date.now()}-${index}`,
+              text: JSON.stringify(item),
+              sender: 'bot',
+              timestamp: currentTimestamp
+            });
           }
         });
       } else if (responseData && typeof responseData === 'object') {
-        // Handle case where response is a single object instead of array
+        // Handle case where response is a single object
         messages.push({
           id: Date.now().toString(),
           text: responseData.text || responseData.message || JSON.stringify(responseData),
           sender: 'bot',
-          timestamp: new Date()
+          timestamp: currentTimestamp
         });
       } else {
         console.warn('Resposta do webhook não está no formato esperado:', responseData);
@@ -97,7 +124,7 @@ export const useWebhookMessages = () => {
           id: Date.now().toString(),
           text: "Resposta do servidor recebida, mas em formato não esperado.",
           sender: 'bot',
-          timestamp: new Date()
+          timestamp: currentTimestamp
         });
       }
 

@@ -99,7 +99,7 @@ const Auth = () => {
           onSlideChange={(swiper) => setActiveStep(swiper.activeIndex)}
         >
           <SwiperSlide>
-            <Card className="backdrop-blur-xl bg-white/20 border-purple-500/20 animate-rotate-in shadow-[0_8px_32px_rgba(31,38,135,0.37)]">
+            <Card className="backdrop-blur-xl bg-white/95 border-purple-500/20 animate-rotate-in shadow-[0_8px_32px_rgba(31,38,135,0.37)]">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   {authMode === 'login' ? (
@@ -211,7 +211,7 @@ const Auth = () => {
           </SwiperSlide>
 
           <SwiperSlide>
-            <Card className="backdrop-blur-xl bg-white/20 border-purple-500/20 animate-slide-up">
+            <Card className="backdrop-blur-xl bg-white/95 border-purple-500/20 animate-slide-up">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <Info className="h-5 w-5 text-purple-400" /> 

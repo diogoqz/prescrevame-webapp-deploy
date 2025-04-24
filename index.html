@@ -9,16 +9,30 @@
     <meta name="author" content="PrescrevaMe" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#57D789" />
+    <link rel="icon" href="/lovable-uploads/f9d8ee9c-efab-4f5c-98b5-b08a1a131d86.png" />
     <link rel="apple-touch-icon" href="/lovable-uploads/f9d8ee9c-efab-4f5c-98b5-b08a1a131d86.png" />
     
     <meta property="og:title" content="PrescrevaMe - Chatbot" />
     <meta property="og:description" content="Assistente de prescrições médicas inteligente" />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta property="og:image" content="/lovable-uploads/f9d8ee9c-efab-4f5c-98b5-b08a1a131d86.png" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@prescrevame" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta name="twitter:image" content="/lovable-uploads/f9d8ee9c-efab-4f5c-98b5-b08a1a131d86.png" />
+    
+    <style>
+      /* Preload the logo to prevent 404 errors */
+      body::before {
+        content: "";
+        position: absolute;
+        background-image: url('/lovable-uploads/f9d8ee9c-efab-4f5c-98b5-b08a1a131d86.png');
+        width: 0;
+        height: 0;
+        visibility: hidden;
+        z-index: -1;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
