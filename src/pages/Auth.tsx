@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Eye, EyeOff, LogIn, UserPlus, Info, MessageCircle } from 'lucide-react';
+import { Eye, EyeOff, LogIn, UserPlus, Info, MessageCircle, Heart, ChevronRight } from 'lucide-react';
 
 import 'swiper/css';
 import 'swiper/css/effect-cards';
