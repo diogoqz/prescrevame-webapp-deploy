@@ -79,6 +79,7 @@ export const useWebhookMessages = () => {
         sessionId: userEmail || 'anonymous'
       };
 
+      console.log('Sending message to webhook:', data);
       const webhookMessages = await sendWebhookMessage(data);
       return [...messages, ...webhookMessages];
       
@@ -105,3 +106,4 @@ export const useWebhookMessages = () => {
     analyzeImage 
   };
 };
+

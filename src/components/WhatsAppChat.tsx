@@ -178,13 +178,35 @@ const WhatsAppChat: React.FC = () => {
   };
   
   const handleToggleRecording = () => {
-    if (!user) return;
+    console.log('Toggle recording button pressed, user logged in:', !!user);
+    if (!user) {
+      toast({
+        title: "Não autorizado",
+        description: "Por favor, faça login para usar gravação de áudio.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     toggleRecording((transcribedText) => {
-      setInputMessage(transcribedText);
-      setTimeout(() => {
-        sendMessage();
-      }, 500);
+      console.log('Transcription received:', transcribedText);
+      if (transcribedText) {
+        toast({
+          title: "Transcrição completada",
+          description: `"${transcribedText.substring(0, 50)}${transcribedText.length > 50 ? '...' : ''}"`,
+        });
+        
+        setInputMessage(transcribedText);
+        setTimeout(() => {
+          sendMessage();
+        }, 500);
+      } else {
+        toast({
+          title: "Erro",
+          description: "Não foi possível transcrever o áudio. Tente novamente.",
+          variant: "destructive"
+        });
+      }
     });
   };
 
@@ -231,3 +253,4 @@ const WhatsAppChat: React.FC = () => {
 };
 
 export default WhatsAppChat;
+
