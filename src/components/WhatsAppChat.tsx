@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useChatAuth } from '@/hooks/useChatAuth';
 import { useWebhookMessages } from '@/hooks/useWebhookMessages';
+import { useAudioRecording } from '@/hooks/useAudioRecording';
 import { ChatHeader } from './chat/ChatHeader';
 import { ChatInput } from './chat/ChatInput';
 import MessageList from './chat/MessageList';
@@ -15,7 +17,6 @@ const WhatsAppChat: React.FC = () => {
   const [inputMessage, setInputMessage] = useState('');
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
   const { toast } = useToast();
 
   const {
@@ -29,6 +30,7 @@ const WhatsAppChat: React.FC = () => {
   } = useChatAuth();
 
   const { isTyping, sendMessageToWebhook } = useWebhookMessages();
+  const { isRecording, isProcessing, toggleRecording } = useAudioRecording();
 
   useEffect(() => {
     setMessages([
@@ -53,15 +55,16 @@ const WhatsAppChat: React.FC = () => {
     setMessages(prev => [...prev, ...newMessages]);
   };
 
-  const sendMessage = async () => {
-    if (!inputMessage.trim() && !selectedImage) return;
+  const sendMessage = async (messageText?: string) => {
+    const textToSend = messageText || inputMessage.trim();
     
-    const messageText = inputMessage.trim();
+    if (!textToSend && !selectedImage) return;
+    
     setInputMessage('');
 
     const newUserMessage: Message = {
       id: Date.now().toString(),
-      text: messageText,
+      text: textToSend,
       sender: 'user',
       timestamp: new Date(),
       image: imagePreview || undefined
@@ -69,7 +72,7 @@ const WhatsAppChat: React.FC = () => {
     setMessages(prev => [...prev, newUserMessage]);
     
     if (loginStep !== 'idle') {
-      const [handled, newMessages] = await handleAuthMessage(messageText);
+      const [handled, newMessages] = await handleAuthMessage(textToSend);
       if (handled) {
         setMessages(prev => [...prev, ...newMessages]);
         return;
@@ -86,7 +89,7 @@ const WhatsAppChat: React.FC = () => {
     }
 
     const formData = new FormData();
-    formData.append('message', messageText);
+    formData.append('message', textToSend);
     if (selectedImage) {
       formData.append('image', selectedImage);
     }
@@ -140,12 +143,17 @@ const WhatsAppChat: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
-  const toggleRecording = () => {
-    setIsRecording(!isRecording);
-    if (!isRecording) {
+  const handleMicClick = async () => {
+    if (user) {
+      const transcription = await toggleRecording();
+      if (transcription) {
+        await sendMessage(transcription);
+      }
+    } else {
       toast({
-        title: "Gravação de voz",
-        description: "Funcionalidade em desenvolvimento.",
+        title: "Não autorizado",
+        description: "Por favor, faça login para gravar mensagens de voz.",
+        variant: "destructive"
       });
     }
   };
@@ -172,8 +180,9 @@ const WhatsAppChat: React.FC = () => {
           setShowPassword={setShowPassword}
           imagePreview={imagePreview}
           onImageUpload={handleImageUpload}
-          onToggleRecording={toggleRecording}
+          onToggleRecording={handleMicClick}
           isRecording={isRecording}
+          isProcessingAudio={isProcessing}
           user={user}
           handleButtonClick={handleButtonClick}
         />

@@ -1,1 +1,5 @@
-project_id = "soaonapntsktpqoqptyz"
+
+project_id = "prescrevame"
+
+[functions.transcribe-audio]
+verify_jwt = true

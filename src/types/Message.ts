@@ -6,6 +6,7 @@ export interface Message {
   timestamp: Date;
   buttons?: MessageButton[];
   image?: string;
+  audioTranscript?: string;
 }
 
 export interface MessageButton {
