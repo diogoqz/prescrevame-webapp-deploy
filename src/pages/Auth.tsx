@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -11,9 +10,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
-  const { signIn, signUp, user, signInWithSocial } = useAuth();
+  const { signIn, signUp, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -34,7 +34,7 @@ const Auth = () => {
           description: "Bem-vindo de volta!",
         });
       } else {
-        await signUp(email, password);
+        await signUp(email, password, fullName);
         toast({
           title: "Cadastro bem-sucedido",
           description: "Verifique seu email para confirmar seu cadastro.",
@@ -56,18 +56,6 @@ const Auth = () => {
 
   const handleModeChange = () => {
     setAuthMode(prevMode => prevMode === 'login' ? 'signup' : 'login');
-  };
-  
-  const handleSocialLogin = async (provider: 'google' | 'facebook') => {
-    try {
-      await signInWithSocial(provider);
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: error instanceof Error ? error.message : `Erro ao fazer login com ${provider}`,
-        variant: "destructive",
-      });
-    }
   };
 
   return (
@@ -160,7 +148,6 @@ const Auth = () => {
                 onSubmit={handleSubmit}
                 onModeChange={handleModeChange}
                 onSupport={handleSupport}
-                onSocialLogin={handleSocialLogin}
               />
             </Card>
           </motion.div>

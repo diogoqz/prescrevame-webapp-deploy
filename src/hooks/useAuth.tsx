@@ -7,13 +7,10 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, phone?: string) => Promise<void>;
+  signUp: (email: string, password: string, fullName?: string) => Promise<void>;
   signOut: () => Promise<void>;
-  signInWithPhone: (phone: string, password: string) => Promise<void>;
-  signUpWithPhone: (phone: string, password: string) => Promise<void>;
   sendPasswordResetEmail: (email: string) => Promise<void>;
   sendMagicLink: (email: string) => Promise<void>;
-  signInWithSocial: (provider: 'google' | 'facebook') => Promise<void>;
   loading: boolean;
 }
 
@@ -52,13 +49,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
   };
 
-  const signUp = async (email: string, password: string, phone?: string) => {
+  const signUp = async (email: string, password: string, fullName?: string) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
-          phone: phone,
+          full_name: fullName,
         },
       },
     });
@@ -67,22 +64,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
-    if (error) throw error;
-  };
-
-  const signInWithPhone = async (phone: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      phone,
-      password,
-    });
-    if (error) throw error;
-  };
-
-  const signUpWithPhone = async (phone: string, password: string) => {
-    const { error } = await supabase.auth.signUp({
-      phone,
-      password,
-    });
     if (error) throw error;
   };
 
@@ -103,13 +84,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
   };
 
-  const signInWithSocial = async (provider: 'google' | 'facebook') => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: provider,
-    });
-    if (error) throw error;
-  };
-
   return (
     <AuthContext.Provider value={{ 
       user, 
@@ -117,11 +91,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signIn, 
       signUp, 
       signOut,
-      signInWithPhone,
-      signUpWithPhone,
       sendPasswordResetEmail,
       sendMagicLink,
-      signInWithSocial,
       loading
     }}>
       {children}

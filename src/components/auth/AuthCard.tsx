@@ -4,11 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Eye, EyeOff, LogIn, UserPlus, MessageCircle, Mail, Phone, KeyRound, Facebook, Globe } from 'lucide-react';
-import PhoneInput from './PhoneInput';
+import { Eye, EyeOff, LogIn, UserPlus, MessageCircle, Mail } from 'lucide-react';
 import PasswordReset from './PasswordReset';
 import MagicLink from './MagicLink';
-import PhoneAuth from './PhoneAuth';
 
 interface AuthCardProps {
   authMode: 'login' | 'signup';
@@ -21,10 +19,9 @@ interface AuthCardProps {
   onSubmit: (e: React.FormEvent) => void;
   onModeChange: () => void;
   onSupport: () => void;
-  onSocialLogin: (provider: 'google' | 'facebook') => void;
 }
 
-type AuthView = 'main' | 'reset-password' | 'magic-link' | 'phone';
+type AuthView = 'main' | 'reset-password' | 'magic-link';
 
 const AuthCard: React.FC<AuthCardProps> = ({
   authMode,
@@ -37,10 +34,9 @@ const AuthCard: React.FC<AuthCardProps> = ({
   onSubmit,
   onModeChange,
   onSupport,
-  onSocialLogin
 }) => {
-  const [phone, setPhone] = useState('');
   const [currentView, setCurrentView] = useState<AuthView>('main');
+  const [fullName, setFullName] = useState('');
   
   if (currentView === 'reset-password') {
     return (
@@ -57,16 +53,6 @@ const AuthCard: React.FC<AuthCardProps> = ({
       <Card className="bg-whatsapp-bubbleReceived/95 border-none">
         <CardContent className="pt-6">
           <MagicLink onBack={() => setCurrentView('main')} />
-        </CardContent>
-      </Card>
-    );
-  }
-  
-  if (currentView === 'phone') {
-    return (
-      <Card className="bg-whatsapp-bubbleReceived/95 border-none">
-        <CardContent className="pt-6">
-          <PhoneAuth authMode={authMode} onBack={() => setCurrentView('main')} />
         </CardContent>
       </Card>
     );
@@ -97,6 +83,20 @@ const AuthCard: React.FC<AuthCardProps> = ({
       </CardHeader>
       <CardContent>
         <form onSubmit={onSubmit} className="space-y-4">
+          {authMode === 'signup' && (
+            <div className="space-y-2">
+              <Label htmlFor="fullName" className="text-gray-300">Nome Completo</Label>
+              <Input
+                id="fullName"
+                type="text"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                className="bg-whatsapp-inputBg border-none text-white placeholder:text-gray-400"
+                placeholder="Seu nome completo"
+              />
+            </div>
+          )}
+          
           <div className="space-y-2">
             <Label htmlFor="email" className="text-gray-300">Email</Label>
             <Input
@@ -109,13 +109,6 @@ const AuthCard: React.FC<AuthCardProps> = ({
               placeholder="seuemail@exemplo.com"
             />
           </div>
-          
-          {authMode === 'signup' && (
-            <PhoneInput
-              value={phone}
-              onChange={setPhone}
-            />
-          )}
           
           <div className="space-y-2">
             <Label htmlFor="password" className="text-gray-300">Senha</Label>
@@ -154,7 +147,7 @@ const AuthCard: React.FC<AuthCardProps> = ({
 
           <Button 
             type="submit" 
-            className="w-full bg-prescrevame hover:bg-prescrevame-dark text-white font-medium transition-all duration-300"
+            className="w-full bg-prescrevame hover:bg-prescrevame-dark text-white font-medium transition-all"
           >
             {authMode === 'login' ? 'Entrar' : 'Cadastrar'}
           </Button>
@@ -169,51 +162,16 @@ const AuthCard: React.FC<AuthCardProps> = ({
             </div>
           </div>
           
-          {/* Botões para redes sociais */}
-          <div className="grid grid-cols-2 gap-3">
-            <Button 
-              type="button" 
-              variant="outline" 
-              className="border-gray-600 bg-transparent hover:bg-whatsapp-inputBg text-white"
-              onClick={() => onSocialLogin('google')}
-            >
-              <Globe className="mr-2 h-4 w-4" />
-              Google
-            </Button>
-            
-            <Button 
-              type="button" 
-              variant="outline" 
-              className="border-gray-600 bg-transparent hover:bg-whatsapp-inputBg text-white"
-              onClick={() => onSocialLogin('facebook')}
-            >
-              <Facebook className="mr-2 h-4 w-4" />
-              Facebook
-            </Button>
-          </div>
-          
-          {/* Botões para outros métodos */}
-          <div className="grid grid-cols-2 gap-3">
-            <Button 
-              type="button"
-              variant="outline"
-              className="border-gray-600 bg-transparent hover:bg-whatsapp-inputBg text-white"
-              onClick={() => setCurrentView('magic-link')}
-            >
-              <Mail className="mr-2 h-4 w-4" />
-              Link Mágico
-            </Button>
-            
-            <Button 
-              type="button"
-              variant="outline"
-              className="border-gray-600 bg-transparent hover:bg-whatsapp-inputBg text-white"
-              onClick={() => setCurrentView('phone')}
-            >
-              <Phone className="mr-2 h-4 w-4" />
-              Telefone
-            </Button>
-          </div>
+          {/* Link Mágico */}
+          <Button 
+            type="button"
+            variant="outline"
+            className="w-full border-gray-600 bg-transparent hover:bg-whatsapp-inputBg text-white"
+            onClick={() => setCurrentView('magic-link')}
+          >
+            <Mail className="mr-2 h-4 w-4" />
+            Link Mágico
+          </Button>
         </form>
       </CardContent>
       <CardFooter className="flex flex-col space-y-4 pt-2">
