@@ -1,5 +1,5 @@
 
 project_id = "soaonapntsktpqoqptyz"
 
-[functions.analyze-image]
+[functions.transcribe-audio]
 verify_jwt = true

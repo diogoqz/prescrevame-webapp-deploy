@@ -3,6 +3,7 @@ import { Send, Mic, Paperclip, Image, X, MicOff, Eye, EyeOff, LogIn } from 'luci
 import { LoginStep } from '@/hooks/useChatAuth';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAudioRecording } from '@/hooks/useAudioRecording';
 
 interface ChatInputProps {
   inputMessage: string;
@@ -15,8 +16,6 @@ interface ChatInputProps {
   setShowPassword: (show: boolean) => void;
   imagePreview: string | null;
   onImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onToggleRecording: () => void;
-  isRecording: boolean;
   user: any;
   handleButtonClick: (id: string, label: string) => void;
 }
@@ -32,8 +31,6 @@ export const ChatInput = ({
   setShowPassword,
   imagePreview,
   onImageUpload,
-  onToggleRecording,
-  isRecording,
   user,
   handleButtonClick
 }: ChatInputProps) => {
@@ -41,6 +38,19 @@ export const ChatInput = ({
   const [isFocused, setIsFocused] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const dropZoneRef = useRef<HTMLDivElement>(null);
+  
+  const { isRecording, isProcessing, toggleRecording } = useAudioRecording();
+
+  const handleToggleRecording = useCallback(() => {
+    if (!user) return;
+    
+    toggleRecording((transcribedText) => {
+      setInputMessage(transcribedText);
+      setTimeout(() => {
+        onSendMessage();
+      }, 500);
+    });
+  }, [toggleRecording, user, setInputMessage, onSendMessage]);
 
   const openFileUpload = () => {
     fileInputRef.current?.click();
@@ -169,17 +179,21 @@ export const ChatInput = ({
           </div>
         ) : (
           <>
-            {/* Mic icon first */}
             <Button 
               variant="ghost"
               size="icon"
-              onClick={onToggleRecording}
-              className="rounded-full text-whatsapp-textSecondary hover:text-prescrevame hover:bg-whatsapp-inputBg transition-all duration-300"
+              onClick={handleToggleRecording}
+              disabled={isProcessing}
+              className={`rounded-full transition-all duration-300
+                ${isRecording 
+                  ? 'text-red-500 animate-pulse' 
+                  : isProcessing 
+                    ? 'text-amber-500 animate-pulse' 
+                    : 'text-whatsapp-textSecondary hover:text-prescrevame hover:bg-whatsapp-inputBg'}`}
             >
               {isRecording ? <MicOff size={24} /> : <Mic size={24} />}
             </Button>
             
-            {/* Paperclip icon second */}
             <Button 
               variant="ghost"
               size="icon"
@@ -204,9 +218,10 @@ export const ChatInput = ({
                 onKeyDown={onKeyDown}
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
-                placeholder={loginStep === 'password' ? 'Digite sua senha' : 'Digite uma mensagem'}
+                placeholder={isRecording ? 'Gravando áudio...' : isProcessing ? 'Processando áudio...' : loginStep === 'password' ? 'Digite sua senha' : 'Digite uma mensagem'}
                 className="w-full px-4 py-2 rounded-full bg-whatsapp-inputBg text-whatsapp-text placeholder-whatsapp-textSecondary focus:outline-none focus:ring-1 focus:ring-prescrevame transition-all"
                 {...(loginStep === 'password' ? { type: showPassword ? 'text' : 'password' } : {})}
+                disabled={isRecording || isProcessing}
               />
               {loginStep === 'password' && (
                 <button
@@ -218,7 +233,6 @@ export const ChatInput = ({
               )}
             </div>
             
-            {/* Image/Send button on the right */}
             <AnimatePresence mode="wait">
               {inputMessage.trim() || imagePreview ? (
                 <motion.div
@@ -232,6 +246,7 @@ export const ChatInput = ({
                     onClick={onSendMessage}
                     variant="ghost"
                     size="icon"
+                    disabled={isRecording || isProcessing}
                     className="rounded-full text-prescrevame hover:bg-prescrevame/20 transition-all"
                   >
                     <Send size={24} />
@@ -259,6 +274,35 @@ export const ChatInput = ({
           </>
         )}
       </div>
+      
+      <AnimatePresence>
+        {isRecording && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="w-full flex items-center justify-center"
+          >
+            <div className="flex items-center gap-2 text-red-500 text-xs">
+              <span className="inline-block w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
+              Gravando áudio... Clique no microfone para enviar
+            </div>
+          </motion.div>
+        )}
+        {isProcessing && !isRecording && (
+          <motion.div 
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="w-full flex items-center justify-center"
+          >
+            <div className="flex items-center gap-2 text-amber-500 text-xs">
+              <span className="inline-block w-2 h-2 bg-amber-500 rounded-full animate-ping"></span>
+              Transcrevendo áudio...
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

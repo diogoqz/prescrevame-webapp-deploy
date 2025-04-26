@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useChatAuth } from '@/hooks/useChatAuth';
@@ -89,7 +88,6 @@ const WhatsAppChat: React.FC = () => {
     }
 
     if (selectedImage && analyzeImageOptions) {
-      // Se for para analisar a imagem
       const reader = new FileReader();
       reader.onload = async (e) => {
         const imageUrl = e.target?.result as string;
@@ -106,7 +104,9 @@ const WhatsAppChat: React.FC = () => {
     }
     
     const formData = new FormData();
-    formData.append('message', messageText);
+    if (messageText) {
+      formData.append('message', messageText);
+    }
     if (selectedImage) {
       formData.append('image', selectedImage);
     }
@@ -165,16 +165,6 @@ const WhatsAppChat: React.FC = () => {
     }
   };
 
-  const toggleRecording = () => {
-    setIsRecording(!isRecording);
-    if (!isRecording) {
-      toast({
-        title: "Gravação de voz",
-        description: "Funcionalidade em desenvolvimento.",
-      });
-    }
-  };
-  
   const handleAnalyzeImage = (options: { prompt: string; model: string; temperature: number }) => {
     setShowImageAnalysisDialog(false);
     sendMessage(options);
@@ -206,8 +196,8 @@ const WhatsAppChat: React.FC = () => {
           setShowPassword={setShowPassword}
           imagePreview={imagePreview}
           onImageUpload={handleImageUpload}
-          onToggleRecording={toggleRecording}
-          isRecording={isRecording}
+          onToggleRecording={() => {}} // Mantido para compatibilidade mas não utilizado
+          isRecording={isRecording} // Mantido para compatibilidade mas não utilizado
           user={user}
           handleButtonClick={handleButtonClick}
         />
