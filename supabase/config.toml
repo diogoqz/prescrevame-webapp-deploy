@@ -1,6 +1,1 @@
-
 project_id = "soaonapntsktpqoqptyz"
-
-[functions.transcribe-audio]
-verify_jwt = false  # Change this to false to allow anonymous access for testing
-

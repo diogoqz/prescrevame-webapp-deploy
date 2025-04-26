@@ -1,8 +1,13 @@
+
 import React, { useRef, useState, useCallback } from 'react';
-import { Send, Mic, Paperclip, Image, X, MicOff, Eye, EyeOff, LogIn } from 'lucide-react';
-import { LoginStep } from '@/hooks/useChatAuth';
+import { Send, Mic, Paperclip, Image, MicOff, Eye, EyeOff, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
+import { LoginStep } from '@/hooks/useChatAuth';
+import { useChatSuggestions } from '@/hooks/useChatSuggestions';
+import { ChatSuggestions } from './ChatSuggestions';
+import { ChatImagePreview } from './ChatImagePreview';
+import { ChatDragOverlay } from './ChatDragOverlay';
 
 interface ChatInputProps {
   inputMessage: string;
@@ -17,7 +22,6 @@ interface ChatInputProps {
   onImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onToggleRecording: () => void;
   isRecording: boolean;
-  isProcessing: boolean;
   user: any;
   handleButtonClick: (id: string, label: string) => void;
 }
@@ -35,15 +39,16 @@ export const ChatInput = ({
   onImageUpload,
   onToggleRecording,
   isRecording,
-  isProcessing,
   user,
   handleButtonClick
 }: ChatInputProps) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isFocused, setIsFocused] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
   
+  const { suggestions, showSuggestions, setShowSuggestions } = useChatSuggestions(inputMessage, user);
+
   const openFileUpload = () => {
     fileInputRef.current?.click();
   };
@@ -100,6 +105,11 @@ export const ChatInput = ({
     if (fileInputRef.current) fileInputRef.current.dispatchEvent(event);
   };
 
+  const handleSuggestionClick = (term: string) => {
+    setInputMessage(term);
+    setShowSuggestions(false);
+  };
+
   return (
     <div 
       ref={dropZoneRef}
@@ -110,55 +120,17 @@ export const ChatInput = ({
       onDrop={handleDrop}
     >
       <AnimatePresence>
-        {isDragging && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="absolute inset-0 bg-whatsapp-header/90 flex items-center justify-center z-50 border-2 border-dashed border-prescrevame/50 backdrop-blur-sm"
-          >
-            <motion.div
-              animate={{ 
-                scale: [1, 1.05, 1],
-                y: [0, -5, 0]
-              }}
-              transition={{
-                duration: 1.5,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-              className="flex flex-col items-center gap-2"
-            >
-              <Image size={32} className="text-prescrevame" />
-              <p className="text-prescrevame text-lg font-medium">Solte a imagem aqui</p>
-            </motion.div>
-          </motion.div>
-        )}
+        <ChatDragOverlay isDragging={isDragging} />
       </AnimatePresence>
       
       <AnimatePresence>
-        {imagePreview && (
-          <motion.div 
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
-            className="relative w-24 h-24 rounded-lg overflow-hidden border-2 border-prescrevame/50"
-          >
-            <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-            <Button 
-              onClick={removeImage}
-              size="icon"
-              variant="ghost"
-              className="absolute top-0 right-0 bg-black/70 rounded-full p-1 text-white hover:bg-black"
-            >
-              <X size={16} />
-            </Button>
-          </motion.div>
-        )}
+        <ChatImagePreview 
+          imagePreview={imagePreview} 
+          onRemoveImage={removeImage} 
+        />
       </AnimatePresence>
       
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 relative">
         {!user && loginStep === 'idle' ? (
           <div className="flex-1 text-center">
             <Button
@@ -175,13 +147,7 @@ export const ChatInput = ({
               variant="ghost"
               size="icon"
               onClick={onToggleRecording}
-              disabled={isProcessing}
-              className={`rounded-full transition-all duration-300
-                ${isRecording 
-                  ? 'text-red-500 animate-pulse' 
-                  : isProcessing 
-                    ? 'text-amber-500 animate-pulse' 
-                    : 'text-whatsapp-textSecondary hover:text-prescrevame hover:bg-whatsapp-inputBg'}`}
+              className="rounded-full text-whatsapp-textSecondary hover:text-prescrevame hover:bg-whatsapp-inputBg transition-all duration-300"
             >
               {isRecording ? <MicOff size={24} /> : <Mic size={24} />}
             </Button>
@@ -209,12 +175,21 @@ export const ChatInput = ({
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyDown={onKeyDown}
                 onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-                placeholder={isRecording ? 'Gravando áudio...' : isProcessing ? 'Processando áudio...' : loginStep === 'password' ? 'Digite sua senha' : 'Digite uma mensagem'}
+                onBlur={() => {
+                  setIsFocused(false);
+                  setTimeout(() => setShowSuggestions(false), 200);
+                }}
+                placeholder={loginStep === 'password' ? 'Digite sua senha' : 'Digite uma mensagem'}
                 className="w-full px-4 py-2 rounded-full bg-whatsapp-inputBg text-whatsapp-text placeholder-whatsapp-textSecondary focus:outline-none focus:ring-1 focus:ring-prescrevame transition-all"
                 {...(loginStep === 'password' ? { type: showPassword ? 'text' : 'password' } : {})}
-                disabled={isRecording || isProcessing}
               />
+              
+              <ChatSuggestions 
+                suggestions={suggestions}
+                showSuggestions={showSuggestions}
+                onSuggestionClick={handleSuggestionClick}
+              />
+              
               {loginStep === 'password' && (
                 <button
                   onClick={() => setShowPassword(!showPassword)}
@@ -238,7 +213,6 @@ export const ChatInput = ({
                     onClick={onSendMessage}
                     variant="ghost"
                     size="icon"
-                    disabled={isRecording || isProcessing}
                     className="rounded-full text-prescrevame hover:bg-prescrevame/20 transition-all"
                   >
                     <Send size={24} />
@@ -266,35 +240,6 @@ export const ChatInput = ({
           </>
         )}
       </div>
-      
-      <AnimatePresence>
-        {isRecording && (
-          <motion.div 
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="w-full flex items-center justify-center"
-          >
-            <div className="flex items-center gap-2 text-red-500 text-xs">
-              <span className="inline-block w-2 h-2 bg-red-500 rounded-full animate-ping"></span>
-              Gravando áudio... Clique no microfone para enviar
-            </div>
-          </motion.div>
-        )}
-        {isProcessing && !isRecording && (
-          <motion.div 
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="w-full flex items-center justify-center"
-          >
-            <div className="flex items-center gap-2 text-amber-500 text-xs">
-              <span className="inline-block w-2 h-2 bg-amber-500 rounded-full animate-ping"></span>
-              Transcrevendo áudio...
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };

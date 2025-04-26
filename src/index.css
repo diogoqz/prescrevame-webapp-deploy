@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,185 +5,190 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --prescrevame: 52 100% 50%;
-    --prescrevame-dark: 52 100% 45%;
+    --foreground: 222.2 84% 4.9%;
+
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 222.2 84% 4.9%;
+
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 146 67% 53%; /* PrescrevaMe green */
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 146 67% 53%; /* PrescrevaMe green */
+    --accent-foreground: 222.2 47.4% 11.2%;
+
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 146 67% 53%; /* PrescrevaMe green */
+
     --radius: 0.5rem;
-    --success: 142.1 76.2% 36.3%;
-    --success-foreground: 355.7 100% 97.3%;
-    --warning: 32.1 94.6% 43.7%;
-    --warning-foreground: 355.7 100% 97.3%;
-    --whatsapp-bg: 0 0% 95%;
-    --whatsapp-header: 0 0% 98%;
-    --whatsapp-accent: 122 72.2% 40%;
-    --whatsapp-text: 0 0% 20%;
-    --whatsapp-textSecondary: 0 0% 60%;
-    --whatsapp-bubbleSent: 122 52.2% 95.3%;
-    --whatsapp-bubbleReceived: 0 0% 100%;
-    --whatsapp-inputBg: 0 0% 100%;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-    --success: 142.1 70.6% 45.3%;
-    --success-foreground: 144.9 80.4% 10%;
-    --warning: 32.1 94.6% 43.7%;
-    --warning-foreground: 144.9 80.4% 10%;
-    --whatsapp-bg: 240 6% 10%;
-    --whatsapp-header: 240 5% 13%;
-    --whatsapp-accent: 122 72.2% 40%;
-    --whatsapp-text: 0 0% 100%;
-    --whatsapp-textSecondary: 0 0% 70%;
-    --whatsapp-bubbleSent: 122 47.4% 23.5%;
-    --whatsapp-bubbleReceived: 240 5% 20%;
-    --whatsapp-inputBg: 240 5% 20%;
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 146 67% 53%; /* PrescrevaMe green */
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 146 67% 53%; /* PrescrevaMe green */
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 146 67% 53%; /* PrescrevaMe green */
+    
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
 
-@layer components {
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-slate-900 text-foreground antialiased;
+  }
+
+  /* Custom scrollbar for WhatsApp style */
   .chat-scrollbar::-webkit-scrollbar {
-    width: 5px;
+    width: 6px;
   }
-  
+
   .chat-scrollbar::-webkit-scrollbar-track {
-    @apply bg-transparent;
+    background: transparent;
   }
-  
+
   .chat-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-whatsapp-textSecondary/20 rounded-full;
+    background: rgba(134, 150, 160, 0.3);
+    border-radius: 3px;
   }
-  
+
+  .chat-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(134, 150, 160, 0.5);
+  }
+}
+
+@layer utilities {
   .chat-bubble-sent {
-    @apply relative;
+    position: relative;
   }
-  
+
   .chat-bubble-sent:after {
-    content: "";
-    @apply absolute top-0 right-0 -mr-2 border-8 border-transparent border-t-whatsapp-bubbleSent;
+    content: '';
+    position: absolute;
+    right: -8px;
+    top: 0;
+    border-top: 8px solid #005C4B;
+    border-right: 8px solid transparent;
+  }
+
+  .chat-bubble-received {
+    position: relative;
+  }
+
+  .chat-bubble-received:after {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 0;
+    border-top: 8px solid #202C33;
+    border-left: 8px solid transparent;
   }
   
-  .chat-bubble-received {
+  .glass-card {
+    @apply bg-black/30 backdrop-blur-lg border border-white/10;
+  }
+
+  .tech-card {
+    @apply rounded-xl bg-gradient-to-br from-prescrevame/10 to-black/50 backdrop-blur-md 
+      border border-prescrevame/20 shadow-lg transition-all duration-300;
+  }
+  
+  .tech-card:hover {
+    @apply border-prescrevame/40 shadow-prescrevame/20 shadow-lg;
+  }
+
+  .tech-glow {
     @apply relative;
   }
   
-  .chat-bubble-received:before {
-    content: "";
-    @apply absolute top-0 left-0 -ml-2 border-8 border-transparent border-t-whatsapp-bubbleReceived;
-  }
-
-  .animate-message-appear {
-    animation: message-appear 0.3s ease-out;
+  .tech-glow::before {
+    content: '';
+    @apply absolute inset-0 -z-10 rounded-xl bg-prescrevame/20 blur-xl opacity-0 transition-opacity duration-300;
   }
   
-  .animate-pulse-subtle {
-    animation: pulse-subtle 1.5s infinite;
-  }
-  
-  .animate-typing-dot-1 {
-    animation: typing-dot 1.4s infinite;
-    animation-delay: 0s;
-  }
-  
-  .animate-typing-dot-2 {
-    animation: typing-dot 1.4s infinite;
-    animation-delay: 0.2s;
-  }
-  
-  .animate-typing-dot-3 {
-    animation: typing-dot 1.4s infinite;
-    animation-delay: 0.4s;
+  .tech-glow:hover::before {
+    @apply opacity-100;
   }
 
-  .animate-fade-in {
-    animation: fade-in 0.5s ease-in-out;
+  .glass-modern {
+    @apply backdrop-blur-xl bg-white/10 border border-white/20 shadow-[0_8px_32px_rgba(31,38,135,0.37)];
   }
 
-  /* Animação para botão de gravação */
-  .animate-record-pulse {
-    animation: record-pulse 1.5s infinite;
+  .gradient-border {
+    @apply border border-transparent bg-gradient-to-r from-purple-500/50 to-pink-500/50 backdrop-blur-xl;
+    background-origin: border-box;
+    background-clip: padding-box, border-box;
   }
-}
 
-@keyframes message-appear {
-  0% {
-    opacity: 0;
-    transform: translateY(10px);
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-600;
   }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
-@keyframes pulse-subtle {
-  0%, 100% {
-    opacity: 1;
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite alternate;
   }
-  50% {
-    opacity: 0.7;
-  }
-}
 
-@keyframes typing-dot {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-3px);
-  }
-}
-
-@keyframes fade-in {
-  0% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-
-@keyframes record-pulse {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.1);
-    opacity: 0.8;
+  @keyframes glow {
+    from {
+      box-shadow: 0 0 10px rgba(168,85,247,0.5);
+    }
+    to {
+      box-shadow: 0 0 20px rgba(168,85,247,0.8);
+    }
   }
 }

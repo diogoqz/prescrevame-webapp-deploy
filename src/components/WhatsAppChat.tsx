@@ -1,16 +1,13 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useChatAuth } from '@/hooks/useChatAuth';
 import { useWebhookMessages } from '@/hooks/useWebhookMessages';
-import { useAudioRecording } from '@/hooks/useAudioRecording';
 import { ChatHeader } from './chat/ChatHeader';
 import { ChatInput } from './chat/ChatInput';
 import MessageList from './chat/MessageList';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Message } from '@/types/Message';
 import { AppConfig } from '@/config/app.config';
-import { ImageAnalysisDialog } from './ImageAnalysisDialog';
 
 const WhatsAppChat: React.FC = () => {
   const isMobile = useIsMobile();
@@ -18,10 +15,8 @@ const WhatsAppChat: React.FC = () => {
   const [inputMessage, setInputMessage] = useState('');
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [showImageAnalysisDialog, setShowImageAnalysisDialog] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
   const { toast } = useToast();
-
-  const { isRecording, isProcessing, toggleRecording } = useAudioRecording();
 
   const {
     user,
@@ -33,22 +28,27 @@ const WhatsAppChat: React.FC = () => {
     handleAuthMessage
   } = useChatAuth();
 
-  const { isTyping, sendMessageToWebhook, analyzeImage } = useWebhookMessages();
+  const { isTyping, sendMessageToWebhook } = useWebhookMessages();
 
   useEffect(() => {
     setMessages([
       {
         id: '1',
         text: user 
-          ? 'Olá! Eu sou o PrescrevaMe. Como posso te ajudar hoje?' 
-          : 'Bem-vindo ao PrescrevaMe! Por favor, faça login ou cadastre-se para continuar.',
+          ? AppConfig.chat.welcome.authenticated 
+          : AppConfig.chat.welcome.unauthenticated,
         sender: 'bot',
         timestamp: new Date(),
-        buttons: !user ? [
-          { id: 'login', label: 'Login' },
-          { id: 'signup', label: 'Cadastro' },
-          { id: 'info', label: 'Mais Informações' }
-        ] : undefined
+        buttons: !user 
+          ? [
+              { id: 'login', label: 'Login' },
+              { id: 'signup', label: 'Cadastro' },
+              { id: 'info', label: 'Mais Informações' }
+            ]
+          : AppConfig.chat.quickCommands.map(cmd => ({
+              id: cmd.id,
+              label: cmd.label
+            }))
       }
     ]);
   }, [user]);
@@ -58,11 +58,16 @@ const WhatsAppChat: React.FC = () => {
     setMessages(prev => [...prev, ...newMessages]);
   };
 
-  const sendMessage = async (analyzeImageOptions?: { prompt?: string; model?: string; temperature?: number }) => {
+  const sendMessage = async () => {
     if (!inputMessage.trim() && !selectedImage) return;
     
     const messageText = inputMessage.trim();
     setInputMessage('');
+
+    setMessages(prev => prev.map(msg => ({
+      ...msg,
+      buttons: msg.sender === 'bot' ? undefined : msg.buttons
+    })));
 
     const newUserMessage: Message = {
       id: Date.now().toString(),
@@ -90,26 +95,8 @@ const WhatsAppChat: React.FC = () => {
       return;
     }
 
-    if (selectedImage && analyzeImageOptions) {
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const imageUrl = e.target?.result as string;
-        
-        const botMessages = await analyzeImage(imageUrl, analyzeImageOptions);
-        
-        setMessages(prev => [...prev, ...botMessages]);
-      };
-      reader.readAsDataURL(selectedImage);
-      
-      setSelectedImage(null);
-      setImagePreview(null);
-      return;
-    }
-    
     const formData = new FormData();
-    if (messageText) {
-      formData.append('message', messageText);
-    }
+    formData.append('message', messageText);
     if (selectedImage) {
       formData.append('image', selectedImage);
     }
@@ -161,53 +148,16 @@ const WhatsAppChat: React.FC = () => {
       setImagePreview(e.target?.result as string);
     };
     reader.readAsDataURL(file);
-    
-    // Perguntar se deseja analisar a imagem
-    if (user) {
-      setShowImageAnalysisDialog(true);
-    }
   };
 
-  const handleAnalyzeImage = (options: { prompt: string; model: string; temperature: number }) => {
-    setShowImageAnalysisDialog(false);
-    sendMessage(options);
-  };
-  
-  const handleCancelAnalysis = () => {
-    setShowImageAnalysisDialog(false);
-  };
-  
-  const handleToggleRecording = () => {
-    console.log('Toggle recording button pressed, user logged in:', !!user);
-    if (!user) {
+  const toggleRecording = () => {
+    setIsRecording(!isRecording);
+    if (!isRecording) {
       toast({
-        title: "Não autorizado",
-        description: "Por favor, faça login para usar gravação de áudio.",
-        variant: "destructive"
+        title: "Gravação de voz",
+        description: "Funcionalidade em desenvolvimento.",
       });
-      return;
     }
-    
-    toggleRecording((transcribedText) => {
-      console.log('Transcription received:', transcribedText);
-      if (transcribedText) {
-        toast({
-          title: "Transcrição completada",
-          description: `"${transcribedText.substring(0, 50)}${transcribedText.length > 50 ? '...' : ''}"`,
-        });
-        
-        setInputMessage(transcribedText);
-        setTimeout(() => {
-          sendMessage();
-        }, 500);
-      } else {
-        toast({
-          title: "Erro",
-          description: "Não foi possível transcrever o áudio. Tente novamente.",
-          variant: "destructive"
-        });
-      }
-    });
   };
 
   return (
@@ -224,7 +174,7 @@ const WhatsAppChat: React.FC = () => {
         <ChatInput
           inputMessage={inputMessage}
           setInputMessage={setInputMessage}
-          onSendMessage={() => sendMessage()}
+          onSendMessage={sendMessage}
           onKeyDown={handleKeyDown}
           isTyping={isTyping}
           loginStep={loginStep}
@@ -232,25 +182,14 @@ const WhatsAppChat: React.FC = () => {
           setShowPassword={setShowPassword}
           imagePreview={imagePreview}
           onImageUpload={handleImageUpload}
-          onToggleRecording={handleToggleRecording}
+          onToggleRecording={toggleRecording}
           isRecording={isRecording}
-          isProcessing={isProcessing}
           user={user}
           handleButtonClick={handleButtonClick}
         />
-        
-        {showImageAnalysisDialog && selectedImage && (
-          <ImageAnalysisDialog
-            open={showImageAnalysisDialog}
-            onClose={handleCancelAnalysis}
-            onAnalyze={handleAnalyzeImage}
-            imagePreview={imagePreview}
-          />
-        )}
       </div>
     </div>
   );
 };
 
 export default WhatsAppChat;
-
