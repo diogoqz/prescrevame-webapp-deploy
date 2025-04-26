@@ -10,6 +10,7 @@ import { usePWA } from "@/hooks/usePWA";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import Call from "./pages/Call";
 
 const queryClient = new QueryClient();
 
@@ -69,6 +70,11 @@ const AppContent = () => {
           <Route path="/" element={
             <ProtectedRoute>
               <Index />
+            </ProtectedRoute>
+          } />
+          <Route path="/call" element={
+            <ProtectedRoute>
+              <Call />
             </ProtectedRoute>
           } />
           <Route path="*" element={<NotFound />} />
