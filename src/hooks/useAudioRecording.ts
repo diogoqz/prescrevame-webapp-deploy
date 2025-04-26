@@ -13,9 +13,19 @@ export const useAudioRecording = () => {
 
   const startRecording = useCallback(async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          sampleRate: 16000,
+          echoCancellation: true,
+          noiseSuppression: true,
+          channelCount: 1
+        } 
+      });
       
-      const mediaRecorder = new MediaRecorder(stream);
+      // Use webm for better compatibility with OpenAI Whisper API
+      const options = { mimeType: 'audio/webm' };
+      const mediaRecorder = new MediaRecorder(stream, options);
+      
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
       
@@ -38,7 +48,7 @@ export const useAudioRecording = () => {
       console.error('Error starting recording:', error);
       toast({
         title: "Erro",
-        description: "Não foi possível acessar o microfone.",
+        description: "Não foi possível acessar o microfone. Verifique as permissões do navegador.",
         variant: "destructive"
       });
     }
@@ -56,6 +66,7 @@ export const useAudioRecording = () => {
 
       mediaRecorderRef.current.onstop = async () => {
         try {
+          // Create audio blob with the correct MIME type
           const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
           
           // Convert blob to base64

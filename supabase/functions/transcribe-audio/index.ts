@@ -54,12 +54,16 @@ serve(async (req) => {
     // Process audio in chunks
     const binaryAudio = processBase64Chunks(audio);
     
-    // Prepare form data
+    // Create a blob with explicitly set MIME type
     const formData = new FormData();
+    
+    // Set the proper MIME type for the audio blob
     const blob = new Blob([binaryAudio], { type: 'audio/webm' });
+    
+    // Ensure we provide the right filename with extension
     formData.append('file', blob, 'audio.webm');
     formData.append('model', 'whisper-1');
-
+    
     console.log("Sending audio to OpenAI for transcription...");
 
     // Send to OpenAI

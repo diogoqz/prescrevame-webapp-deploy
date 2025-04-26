@@ -7,7 +7,7 @@ interface LoginPromptProps {
   onLogin: () => void;
 }
 
-export const LoginPrompt = ({ onLogin }: LoginPromptProps) => {
+export const LoginPrompt: React.FC<LoginPromptProps> = ({ onLogin }) => {
   return (
     <div className="flex-1 text-center">
       <Button
