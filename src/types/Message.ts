@@ -6,6 +6,7 @@ export interface Message {
   timestamp: Date;
   buttons?: MessageButton[];
   image?: string;
+  streaming?: boolean;
 }
 
 export interface MessageButton {

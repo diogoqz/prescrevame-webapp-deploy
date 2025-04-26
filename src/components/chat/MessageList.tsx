@@ -43,7 +43,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isTyping, handleBut
           className={`flex mb-4 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
         >
           <div 
-            className={`max-w-[80%] rounded-lg px-3 py-2 animate-message-appear
+            className={`max-w-[80%] rounded-lg px-3 py-2 ${message.streaming ? 'animate-pulse-subtle' : 'animate-message-appear'}
               ${message.sender === 'user' 
                 ? 'bg-whatsapp-bubbleSent chat-bubble-sent' 
                 : 'bg-whatsapp-bubbleReceived chat-bubble-received'}`}
@@ -80,6 +80,13 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isTyping, handleBut
             <div className="text-right mt-1">
               <span className="text-xs text-whatsapp-textSecondary">
                 {formatTime(message.timestamp)}
+                {message.streaming && (
+                  <span className="ml-2 inline-flex">
+                    <span className="w-1 h-1 bg-whatsapp-textSecondary rounded-full mr-0.5 animate-typing-dot-1"></span>
+                    <span className="w-1 h-1 bg-whatsapp-textSecondary rounded-full mr-0.5 animate-typing-dot-2"></span>
+                    <span className="w-1 h-1 bg-whatsapp-textSecondary rounded-full animate-typing-dot-3"></span>
+                  </span>
+                )}
               </span>
             </div>
           </div>

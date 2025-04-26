@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useChatAuth } from '@/hooks/useChatAuth';
@@ -8,6 +9,7 @@ import MessageList from './chat/MessageList';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Message } from '@/types/Message';
 import { AppConfig } from '@/config/app.config';
+import { ImageAnalysisDialog } from './ImageAnalysisDialog';
 
 const WhatsAppChat: React.FC = () => {
   const isMobile = useIsMobile();
@@ -16,6 +18,7 @@ const WhatsAppChat: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
+  const [showImageAnalysisDialog, setShowImageAnalysisDialog] = useState(false);
   const { toast } = useToast();
 
   const {
@@ -28,7 +31,7 @@ const WhatsAppChat: React.FC = () => {
     handleAuthMessage
   } = useChatAuth();
 
-  const { isTyping, sendMessageToWebhook } = useWebhookMessages();
+  const { isTyping, sendMessageToWebhook, analyzeImage } = useWebhookMessages();
 
   useEffect(() => {
     setMessages([
@@ -53,7 +56,7 @@ const WhatsAppChat: React.FC = () => {
     setMessages(prev => [...prev, ...newMessages]);
   };
 
-  const sendMessage = async () => {
+  const sendMessage = async (analyzeImageOptions?: { prompt?: string; model?: string; temperature?: number }) => {
     if (!inputMessage.trim() && !selectedImage) return;
     
     const messageText = inputMessage.trim();
@@ -85,6 +88,28 @@ const WhatsAppChat: React.FC = () => {
       return;
     }
 
+    if (selectedImage && analyzeImageOptions) {
+      // Se for para analisar a imagem
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const imageUrl = e.target?.result as string;
+        
+        const botMessages = await analyzeImage(
+          imageUrl, 
+          analyzeImageOptions.prompt, 
+          analyzeImageOptions.model, 
+          analyzeImageOptions.temperature
+        );
+        
+        setMessages(prev => [...prev, ...botMessages]);
+      };
+      reader.readAsDataURL(selectedImage);
+      
+      setSelectedImage(null);
+      setImagePreview(null);
+      return;
+    }
+    
     const formData = new FormData();
     formData.append('message', messageText);
     if (selectedImage) {
@@ -138,6 +163,11 @@ const WhatsAppChat: React.FC = () => {
       setImagePreview(e.target?.result as string);
     };
     reader.readAsDataURL(file);
+    
+    // Perguntar se deseja analisar a imagem
+    if (user) {
+      setShowImageAnalysisDialog(true);
+    }
   };
 
   const toggleRecording = () => {
@@ -148,6 +178,15 @@ const WhatsAppChat: React.FC = () => {
         description: "Funcionalidade em desenvolvimento.",
       });
     }
+  };
+  
+  const handleAnalyzeImage = (options: { prompt: string; model: string; temperature: number }) => {
+    setShowImageAnalysisDialog(false);
+    sendMessage(options);
+  };
+  
+  const handleCancelAnalysis = () => {
+    setShowImageAnalysisDialog(false);
   };
 
   return (
@@ -164,7 +203,7 @@ const WhatsAppChat: React.FC = () => {
         <ChatInput
           inputMessage={inputMessage}
           setInputMessage={setInputMessage}
-          onSendMessage={sendMessage}
+          onSendMessage={() => sendMessage()}
           onKeyDown={handleKeyDown}
           isTyping={isTyping}
           loginStep={loginStep}
@@ -177,6 +216,15 @@ const WhatsAppChat: React.FC = () => {
           user={user}
           handleButtonClick={handleButtonClick}
         />
+        
+        {showImageAnalysisDialog && selectedImage && (
+          <ImageAnalysisDialog
+            open={showImageAnalysisDialog}
+            onClose={handleCancelAnalysis}
+            onAnalyze={handleAnalyzeImage}
+            imagePreview={imagePreview}
+          />
+        )}
       </div>
     </div>
   );
