@@ -7,8 +7,14 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, phone?: string) => Promise<void>;
   signOut: () => Promise<void>;
+  signInWithPhone: (phone: string, password: string) => Promise<void>;
+  signUpWithPhone: (phone: string, password: string) => Promise<void>;
+  sendPasswordResetEmail: (email: string) => Promise<void>;
+  sendMagicLink: (email: string) => Promise<void>;
+  signInWithSocial: (provider: 'google' | 'facebook') => Promise<void>;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -16,6 +22,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Set up auth state listener
@@ -23,6 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+        setLoading(false);
       }
     );
 
@@ -30,6 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -43,10 +52,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
   };
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, phone?: string) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          phone: phone,
+        },
+      },
     });
     if (error) throw error;
   };
@@ -56,8 +70,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
   };
 
+  const signInWithPhone = async (phone: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      phone,
+      password,
+    });
+    if (error) throw error;
+  };
+
+  const signUpWithPhone = async (phone: string, password: string) => {
+    const { error } = await supabase.auth.signUp({
+      phone,
+      password,
+    });
+    if (error) throw error;
+  };
+
+  const sendPasswordResetEmail = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/auth?reset=true',
+    });
+    if (error) throw error;
+  };
+
+  const sendMagicLink = async (email: string) => {
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: window.location.origin,
+      },
+    });
+    if (error) throw error;
+  };
+
+  const signInWithSocial = async (provider: 'google' | 'facebook') => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: provider,
+    });
+    if (error) throw error;
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      session, 
+      signIn, 
+      signUp, 
+      signOut,
+      signInWithPhone,
+      signUpWithPhone,
+      sendPasswordResetEmail,
+      sendMagicLink,
+      signInWithSocial,
+      loading
+    }}>
       {children}
     </AuthContext.Provider>
   );

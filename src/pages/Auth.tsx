@@ -13,7 +13,7 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, signUp, user, signInWithSocial } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -56,6 +56,18 @@ const Auth = () => {
 
   const handleModeChange = () => {
     setAuthMode(prevMode => prevMode === 'login' ? 'signup' : 'login');
+  };
+  
+  const handleSocialLogin = async (provider: 'google' | 'facebook') => {
+    try {
+      await signInWithSocial(provider);
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: error instanceof Error ? error.message : `Erro ao fazer login com ${provider}`,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -148,6 +160,7 @@ const Auth = () => {
                 onSubmit={handleSubmit}
                 onModeChange={handleModeChange}
                 onSupport={handleSupport}
+                onSocialLogin={handleSocialLogin}
               />
             </Card>
           </motion.div>
