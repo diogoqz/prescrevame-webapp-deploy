@@ -1,7 +1,9 @@
+
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useChatAuth } from '@/hooks/useChatAuth';
 import { useWebhookMessages } from '@/hooks/useWebhookMessages';
+import { useAudioRecording } from '@/hooks/useAudioRecording';
 import { ChatHeader } from './chat/ChatHeader';
 import { ChatInput } from './chat/ChatInput';
 import MessageList from './chat/MessageList';
@@ -16,9 +18,10 @@ const WhatsAppChat: React.FC = () => {
   const [inputMessage, setInputMessage] = useState('');
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
   const [showImageAnalysisDialog, setShowImageAnalysisDialog] = useState(false);
   const { toast } = useToast();
+
+  const { isRecording, isProcessing, toggleRecording } = useAudioRecording();
 
   const {
     user,
@@ -173,6 +176,17 @@ const WhatsAppChat: React.FC = () => {
   const handleCancelAnalysis = () => {
     setShowImageAnalysisDialog(false);
   };
+  
+  const handleToggleRecording = () => {
+    if (!user) return;
+    
+    toggleRecording((transcribedText) => {
+      setInputMessage(transcribedText);
+      setTimeout(() => {
+        sendMessage();
+      }, 500);
+    });
+  };
 
   return (
     <div className={`flex justify-center items-center ${isMobile ? 'h-[100dvh] w-screen p-0' : 'h-screen w-screen p-4'}`}>
@@ -196,8 +210,9 @@ const WhatsAppChat: React.FC = () => {
           setShowPassword={setShowPassword}
           imagePreview={imagePreview}
           onImageUpload={handleImageUpload}
-          onToggleRecording={() => {}} // Mantido para compatibilidade mas não utilizado
-          isRecording={isRecording} // Mantido para compatibilidade mas não utilizado
+          onToggleRecording={handleToggleRecording}
+          isRecording={isRecording}
+          isProcessing={isProcessing}
           user={user}
           handleButtonClick={handleButtonClick}
         />

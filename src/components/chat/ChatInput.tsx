@@ -3,7 +3,6 @@ import { Send, Mic, Paperclip, Image, X, MicOff, Eye, EyeOff, LogIn } from 'luci
 import { LoginStep } from '@/hooks/useChatAuth';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAudioRecording } from '@/hooks/useAudioRecording';
 
 interface ChatInputProps {
   inputMessage: string;
@@ -16,6 +15,9 @@ interface ChatInputProps {
   setShowPassword: (show: boolean) => void;
   imagePreview: string | null;
   onImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onToggleRecording: () => void;
+  isRecording: boolean;
+  isProcessing: boolean;
   user: any;
   handleButtonClick: (id: string, label: string) => void;
 }
@@ -31,6 +33,9 @@ export const ChatInput = ({
   setShowPassword,
   imagePreview,
   onImageUpload,
+  onToggleRecording,
+  isRecording,
+  isProcessing,
   user,
   handleButtonClick
 }: ChatInputProps) => {
@@ -39,19 +44,6 @@ export const ChatInput = ({
   const [isDragging, setIsDragging] = useState(false);
   const dropZoneRef = useRef<HTMLDivElement>(null);
   
-  const { isRecording, isProcessing, toggleRecording } = useAudioRecording();
-
-  const handleToggleRecording = useCallback(() => {
-    if (!user) return;
-    
-    toggleRecording((transcribedText) => {
-      setInputMessage(transcribedText);
-      setTimeout(() => {
-        onSendMessage();
-      }, 500);
-    });
-  }, [toggleRecording, user, setInputMessage, onSendMessage]);
-
   const openFileUpload = () => {
     fileInputRef.current?.click();
   };
@@ -182,7 +174,7 @@ export const ChatInput = ({
             <Button 
               variant="ghost"
               size="icon"
-              onClick={handleToggleRecording}
+              onClick={onToggleRecording}
               disabled={isProcessing}
               className={`rounded-full transition-all duration-300
                 ${isRecording 
