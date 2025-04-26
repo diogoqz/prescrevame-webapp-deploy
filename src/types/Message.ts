@@ -6,7 +6,6 @@ export interface Message {
   timestamp: Date;
   buttons?: MessageButton[];
   image?: string;
-  callAction?: 'start' | 'end';
 }
 
 export interface MessageButton {

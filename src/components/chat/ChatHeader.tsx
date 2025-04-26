@@ -1,10 +1,9 @@
 
-import { LogIn, LogOut, UserPlus, HeadphonesIcon, PhoneCall } from 'lucide-react';
+import { LogIn, LogOut, UserPlus, HeadphonesIcon } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useNavigate } from 'react-router-dom';
 
 interface ChatHeaderProps {
   user: User | null;
@@ -13,11 +12,6 @@ interface ChatHeaderProps {
 
 export const ChatHeader = ({ user, onSignOut }: ChatHeaderProps) => {
   const [supportDialogOpen, setSupportDialogOpen] = useState(false);
-  const navigate = useNavigate();
-
-  const handleCallClick = () => {
-    navigate('/call');
-  };
 
   return (
     <div className="flex items-center gap-3 px-4 py-3 bg-whatsapp-header">
@@ -36,34 +30,25 @@ export const ChatHeader = ({ user, onSignOut }: ChatHeaderProps) => {
         </p>
       </div>
       
-      <a 
-        href="https://api.whatsapp.com/send?phone=556392437559&text=SUPORTE" 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className="rounded-full text-prescrevame hover:bg-prescrevame/10 hover:text-prescrevame-light tech-glow flex items-center justify-center w-10 h-10"
-        title="Suporte"
-      >
-        <HeadphonesIcon size={22} />
-      </a>
+     <a 
+  href="https://api.whatsapp.com/send?phone=556392437559&text=SUPORTE" 
+  target="_blank" 
+  rel="noopener noreferrer"
+  className="rounded-full text-prescrevame hover:bg-prescrevame/10 hover:text-prescrevame-light tech-glow flex items-center justify-center w-10 h-10"
+  title="Suporte"
+>
+  <HeadphonesIcon size={22} />
+</a>
 
+      
       {user && (
-        <>
-          <button
-            onClick={handleCallClick}
-            className="rounded-full text-prescrevame hover:bg-prescrevame/10 hover:text-prescrevame-light tech-glow flex items-center justify-center w-10 h-10"
-            title="Iniciar chamada de voz"
-          >
-            <PhoneCall size={22} />
-          </button>
-          
-          <button
-            onClick={onSignOut}
-            className="text-whatsapp-textSecondary hover:text-whatsapp-accent transition-colors flex items-center gap-2"
-            title="Sair"
-          >
-            <LogOut size={24} />
-          </button>
-        </>
+        <button
+          onClick={onSignOut}
+          className="text-whatsapp-textSecondary hover:text-whatsapp-accent transition-colors flex items-center gap-2"
+          title="Sair"
+        >
+          <LogOut size={24} />
+        </button>
       )}
       
       {/* Support Dialog */}

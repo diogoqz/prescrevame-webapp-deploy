@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
 
 export const usePWA = () => {
-  // Only initialize hooks when this function is called within a component
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const { toast } = useToast();
 
