@@ -6,7 +6,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
-import { usePWA } from "@/hooks/usePWA";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -30,9 +29,6 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 };
 
 const App = () => {
-  // Initialize PWA hook
-  usePWA();
-
   useEffect(() => {
     const hideBadge = () => {
       const badge = document.getElementById("lovable-badge");
