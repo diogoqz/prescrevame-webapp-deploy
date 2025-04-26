@@ -25,27 +25,6 @@ export const useWebhookMessages = () => {
         throw new Error('Usuário precisa estar logado para analisar imagens');
       }
       
-      // Iniciar o streaming da resposta
-      const response = await supabase.functions.invoke('analyze-image', {
-        body: {
-          imageUrl,
-          prompt: prompt || 'Analise esta imagem em detalhes e descreva o que você vê.',
-          model: model || 'gpt-4o',
-          temperature: temperature !== undefined ? temperature : 0.7,
-          userId: session.user.id
-        },
-        responseType: 'stream'
-      });
-
-      if (!response.ok) {
-        throw new Error(`Erro ao analisar imagem: ${response.statusText}`);
-      }
-
-      const reader = response.body?.getReader();
-      if (!reader) {
-        throw new Error('Não foi possível ler a resposta');
-      }
-
       // Criar uma mensagem inicial para o streaming
       const messageId = Date.now().toString();
       
@@ -58,6 +37,31 @@ export const useWebhookMessages = () => {
       };
       
       messages.push(streamingMessage);
+      
+      // Chamar a função Edge diretamente via fetch para obter o streaming
+      const response = await fetch(`${supabase.functions.url}/analyze-image`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          imageUrl,
+          prompt: prompt || 'Analise esta imagem em detalhes e descreva o que você vê.',
+          model: model || 'gpt-4o',
+          temperature: temperature !== undefined ? temperature : 0.7,
+          userId: session.user.id
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Erro ao analisar imagem: ${response.statusText}`);
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('Não foi possível ler a resposta');
+      }
       
       // Processar o streaming
       let fullText = '';
@@ -131,13 +135,13 @@ export const useWebhookMessages = () => {
 
       if (imageFile) {
         // Se o usuário está analisando uma imagem
-        const analyzeImage = formData.get('analyzeImage') === 'true';
+        const analyzeImage = formData.get('analyzeImage');
         
-        if (analyzeImage) {
+        if (analyzeImage === 'true') {
           const reader = new FileReader();
           imageBase64 = await new Promise<string>((resolve) => {
             reader.onload = () => resolve(reader.result as string);
-            reader.readAsDataURL(imageFile);
+            reader.readAsDataURL(imageFile!);
           });
           
           // Upload da imagem para o Supabase Storage
