@@ -58,7 +58,13 @@ export const useWebhookMessages = () => {
             const temperatureStr = formData.get('temperature') as string || undefined;
             const temperature = temperatureStr ? parseFloat(temperatureStr) : undefined;
             
-            const analysisMessages = await analyzeImage(imageUrl, { prompt, model, temperature });
+            const options = {
+              prompt,
+              model,
+              temperature
+            };
+            
+            const analysisMessages = await analyzeImage(imageUrl, options);
             
             return [...messages, ...analysisMessages];
           }
@@ -66,8 +72,9 @@ export const useWebhookMessages = () => {
       }
 
       // Processar mensagens normais (sem análise de imagem)
+      const messageValue = formData.get('message');
       const data = {
-        message: formData.get('message'),
+        message: messageValue ? String(messageValue) : undefined,
         image: imageBase64,
         sessionId: userEmail || 'anonymous'
       };

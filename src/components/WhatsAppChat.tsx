@@ -94,12 +94,7 @@ const WhatsAppChat: React.FC = () => {
       reader.onload = async (e) => {
         const imageUrl = e.target?.result as string;
         
-        const botMessages = await analyzeImage(
-          imageUrl, 
-          analyzeImageOptions.prompt, 
-          analyzeImageOptions.model, 
-          analyzeImageOptions.temperature
-        );
+        const botMessages = await analyzeImage(imageUrl, analyzeImageOptions);
         
         setMessages(prev => [...prev, ...botMessages]);
       };
