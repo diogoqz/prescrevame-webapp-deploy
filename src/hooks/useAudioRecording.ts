@@ -11,8 +11,10 @@ export const useAudioRecording = () => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
+  // Start recording audio with optimized settings
   const startRecording = useCallback(async () => {
     try {
+      // Request microphone access with optimized audio settings for transcription
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           sampleRate: 16000,
@@ -54,6 +56,7 @@ export const useAudioRecording = () => {
     }
   }, [toast]);
 
+  // Stop recording and transcribe the audio
   const stopRecording = useCallback(async (): Promise<string | null> => {
     return new Promise((resolve) => {
       if (!mediaRecorderRef.current || mediaRecorderRef.current.state === 'inactive') {
@@ -119,7 +122,7 @@ export const useAudioRecording = () => {
           setIsRecording(false);
           setIsProcessing(false);
           
-          // Stop all tracks
+          // Properly clean up all media tracks
           if (mediaRecorderRef.current) {
             const stream = mediaRecorderRef.current.stream;
             stream.getTracks().forEach(track => track.stop());
@@ -134,6 +137,7 @@ export const useAudioRecording = () => {
     });
   }, [toast]);
 
+  // Toggle recording state
   const toggleRecording = useCallback(async () => {
     if (isRecording) {
       return await stopRecording();
