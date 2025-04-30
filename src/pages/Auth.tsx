@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -10,7 +11,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const { signIn, signUp, user } = useAuth();
@@ -34,7 +34,7 @@ const Auth = () => {
           description: "Bem-vindo de volta!",
         });
       } else {
-        await signUp(email, password, fullName);
+        await signUp(email, password);
         toast({
           title: "Cadastro bem-sucedido",
           description: "Verifique seu email para confirmar seu cadastro.",

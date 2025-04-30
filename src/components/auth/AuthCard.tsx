@@ -1,12 +1,11 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Eye, EyeOff, LogIn, UserPlus, MessageCircle, Mail } from 'lucide-react';
-import PasswordReset from './PasswordReset';
-import MagicLink from './MagicLink';
+import { Eye, EyeOff, LogIn, UserPlus } from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
 
 interface AuthCardProps {
   authMode: 'login' | 'signup';
@@ -21,8 +20,6 @@ interface AuthCardProps {
   onSupport: () => void;
 }
 
-type AuthView = 'main' | 'reset-password' | 'magic-link';
-
 const AuthCard: React.FC<AuthCardProps> = ({
   authMode,
   email,
@@ -33,31 +30,8 @@ const AuthCard: React.FC<AuthCardProps> = ({
   onTogglePassword,
   onSubmit,
   onModeChange,
-  onSupport,
+  onSupport
 }) => {
-  const [currentView, setCurrentView] = useState<AuthView>('main');
-  const [fullName, setFullName] = useState('');
-  
-  if (currentView === 'reset-password') {
-    return (
-      <Card className="bg-whatsapp-bubbleReceived/95 border-none">
-        <CardContent className="pt-6">
-          <PasswordReset onBack={() => setCurrentView('main')} />
-        </CardContent>
-      </Card>
-    );
-  }
-  
-  if (currentView === 'magic-link') {
-    return (
-      <Card className="bg-whatsapp-bubbleReceived/95 border-none">
-        <CardContent className="pt-6">
-          <MagicLink onBack={() => setCurrentView('main')} />
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <Card className="bg-whatsapp-bubbleReceived/95 border-none">
       <CardHeader>
@@ -83,20 +57,6 @@ const AuthCard: React.FC<AuthCardProps> = ({
       </CardHeader>
       <CardContent>
         <form onSubmit={onSubmit} className="space-y-4">
-          {authMode === 'signup' && (
-            <div className="space-y-2">
-              <Label htmlFor="fullName" className="text-gray-300">Nome Completo</Label>
-              <Input
-                id="fullName"
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                className="bg-whatsapp-inputBg border-none text-white placeholder:text-gray-400"
-                placeholder="Seu nome completo"
-              />
-            </div>
-          )}
-          
           <div className="space-y-2">
             <Label htmlFor="email" className="text-gray-300">Email</Label>
             <Input
@@ -132,45 +92,11 @@ const AuthCard: React.FC<AuthCardProps> = ({
             </div>
           </div>
 
-          {authMode === 'login' && (
-            <div className="flex justify-end">
-              <Button 
-                type="button" 
-                variant="link" 
-                className="p-0 h-auto text-sm text-prescrevame hover:text-prescrevame-light"
-                onClick={() => setCurrentView('reset-password')}
-              >
-                Esqueceu a senha?
-              </Button>
-            </div>
-          )}
-
           <Button 
             type="submit" 
-            className="w-full bg-prescrevame hover:bg-prescrevame-dark text-white font-medium transition-all"
+            className="w-full bg-prescrevame hover:bg-prescrevame-dark text-white font-medium transition-all duration-300"
           >
             {authMode === 'login' ? 'Entrar' : 'Cadastrar'}
-          </Button>
-          
-          {/* Opções alternativas de login */}
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-600"></div>
-            </div>
-            <div className="relative flex justify-center text-xs">
-              <span className="px-2 bg-whatsapp-bubbleReceived text-gray-400">ou</span>
-            </div>
-          </div>
-          
-          {/* Link Mágico */}
-          <Button 
-            type="button"
-            variant="outline"
-            className="w-full border-gray-600 bg-transparent hover:bg-whatsapp-inputBg text-white"
-            onClick={() => setCurrentView('magic-link')}
-          >
-            <Mail className="mr-2 h-4 w-4" />
-            Link Mágico
           </Button>
         </form>
       </CardContent>
