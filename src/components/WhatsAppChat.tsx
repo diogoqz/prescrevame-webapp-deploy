@@ -11,6 +11,7 @@ import { Message } from '@/types/Message';
 import { AppConfig } from '@/config/app.config';
 import { ImageDropzone } from './chat/input/ImageDropzone';
 import { userService } from '@/services/userService';
+import { useChatPersistence } from '@/hooks/useChatPersistence';
 
 const WhatsAppChat: React.FC = () => {
   const isMobile = useIsMobile();
@@ -35,24 +36,59 @@ const WhatsAppChat: React.FC = () => {
 
   const { isTyping, sendMessageToWebhook } = useWebhookMessages();
   const { isRecording, isProcessing, toggleRecording } = useAudioRecording();
+  const { 
+    isLoading: isLoadingMessages, 
+    isConnected: isRedisConnected, 
+    loadMessages, 
+    saveMessages, 
+    addMessage 
+  } = useChatPersistence(user?.email || null);
 
+  // Carregar mensagens do Redis quando o usuário fizer login
   useEffect(() => {
-    setMessages([
-      {
-        id: '1',
-        text: user 
-          ? 'Olá! Eu sou o PrescrevaMe. Como posso te ajudar hoje?' 
-          : 'Bem-vindo ao PrescrevaMe! Por favor, faça login ou cadastre-se para continuar.',
-        sender: 'bot',
-        timestamp: new Date(),
-        buttons: !user ? [
-          { id: 'login', label: 'Login' },
-          { id: 'signup', label: 'Cadastro' },
-          { id: 'info', label: 'Mais Informações' }
-        ] : undefined
+    const initializeMessages = async () => {
+      if (user?.email && isRedisConnected) {
+        // Carregar mensagens salvas do Redis
+        const savedMessages = await loadMessages();
+        
+        if (savedMessages.length > 0) {
+          // Se há mensagens salvas, usar elas
+          setMessages(savedMessages);
+          setHasUserMessages(savedMessages.some(msg => msg.sender === 'user'));
+        } else {
+          // Se não há mensagens salvas, mostrar mensagem de boas-vindas
+          const welcomeMessage: Message = {
+            id: '1',
+            text: 'Olá! Eu sou o PrescrevaMe. Como posso te ajudar hoje?',
+            sender: 'bot',
+            timestamp: new Date()
+          };
+          setMessages([welcomeMessage]);
+          setHasUserMessages(false);
+          // Salvar a mensagem de boas-vindas
+          await addMessage(welcomeMessage);
+        }
+      } else {
+        // Usuário não logado, mostrar mensagem de login
+        setMessages([
+          {
+            id: '1',
+            text: 'Bem-vindo ao PrescrevaMe! Por favor, faça login ou cadastre-se para continuar.',
+            sender: 'bot',
+            timestamp: new Date(),
+            buttons: [
+              { id: 'login', label: 'Login' },
+              { id: 'signup', label: 'Cadastro' },
+              { id: 'info', label: 'Mais Informações' }
+            ]
+          }
+        ]);
+        setHasUserMessages(false);
       }
-    ]);
-  }, [user]);
+    };
+
+    initializeMessages();
+  }, [user, isRedisConnected, loadMessages, addMessage]);
 
   // Verificar status e se é trial quando ele fizer login
   useEffect(() => {
@@ -72,6 +108,13 @@ const WhatsAppChat: React.FC = () => {
   const handleButtonClick = async (buttonId: string, buttonLabel: string) => {
     const newMessages = await handleAuthButton(buttonId, buttonLabel);
     setMessages(prev => [...prev, ...newMessages]);
+    
+    // Salvar mensagens de autenticação no Redis
+    if (user?.email && newMessages.length > 0) {
+      for (const message of newMessages) {
+        await addMessage(message);
+      }
+    }
   };
 
   const handleSuggestionClick = (suggestion: string) => {
@@ -123,10 +166,22 @@ const WhatsAppChat: React.FC = () => {
     setMessages(prev => [...prev, newUserMessage]);
     setHasUserMessages(true);
     
+    // Salvar mensagem do usuário no Redis
+    if (user?.email) {
+      await addMessage(newUserMessage);
+    }
+    
     if (loginStep !== 'idle') {
       const [handled, newMessages] = await handleAuthMessage(textToSend);
       if (handled) {
         setMessages(prev => [...prev, ...newMessages]);
+        
+        // Salvar mensagens de autenticação no Redis
+        if (user?.email && newMessages.length > 0) {
+          for (const message of newMessages) {
+            await addMessage(message);
+          }
+        }
         return;
       }
     }
@@ -156,11 +211,17 @@ const WhatsAppChat: React.FC = () => {
       if (botMessages && botMessages.length > 0) {
         botMessages.forEach((message, index) => {
           if (message && typeof message.text === 'string' && message.text.trim()) {
-            setTimeout(() => {
-              setMessages(prev => [...prev, {
+            setTimeout(async () => {
+              const botMessage = {
                 ...message,
                 text: message.text.trim()
-              }]);
+              };
+              setMessages(prev => [...prev, botMessage]);
+              
+              // Salvar mensagem do bot no Redis
+              if (user?.email) {
+                await addMessage(botMessage);
+              }
             }, 800 * (index + 1));
           }
         });
@@ -260,7 +321,12 @@ const WhatsAppChat: React.FC = () => {
     <ImageDropzone onDrop={handleDrop}>
       <div className={`flex justify-center items-center ${isMobile ? 'h-[100dvh] w-screen p-0' : 'h-screen w-screen p-4'}`}>
         <div className={`flex flex-col ${isMobile ? 'w-full h-full' : `w-full max-w-${AppConfig.chat.desktop.maxWidth} h-full`} rounded-lg overflow-hidden shadow-xl bg-whatsapp-bg`}>
-          <ChatHeader user={user} onSignOut={signOut} />
+          <ChatHeader 
+            user={user} 
+            onSignOut={signOut} 
+            isRedisConnected={isRedisConnected}
+            isLoadingMessages={isLoadingMessages}
+          />
           
           <MessageList 
             messages={messages} 

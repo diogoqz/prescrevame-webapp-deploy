@@ -8,9 +8,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 interface ChatHeaderProps {
   user: User | null;
   onSignOut: () => void;
+  isRedisConnected?: boolean;
+  isLoadingMessages?: boolean;
 }
 
-export const ChatHeader = ({ user, onSignOut }: ChatHeaderProps) => {
+export const ChatHeader = ({ user, onSignOut, isRedisConnected, isLoadingMessages }: ChatHeaderProps) => {
   const [supportDialogOpen, setSupportDialogOpen] = useState(false);
 
   return (
@@ -25,9 +27,25 @@ export const ChatHeader = ({ user, onSignOut }: ChatHeaderProps) => {
 
       <div className="flex-1">
         <h3 className="font-bold text-whatsapp-text">PrescrevaMe</h3>
-        <p className="text-xs text-whatsapp-textSecondary">
-          {user ? `Conectado - ${user.email}` : 'Faça login para continuar'}
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="text-xs text-whatsapp-textSecondary">
+            {user ? `Conectado - ${user.email}` : 'Faça login para continuar'}
+          </p>
+          {user && (
+            <div className="flex items-center gap-1">
+              <div className={`w-2 h-2 rounded-full ${
+                isLoadingMessages 
+                  ? 'bg-yellow-500 animate-pulse' 
+                  : isRedisConnected 
+                    ? 'bg-green-500' 
+                    : 'bg-red-500'
+              }`} />
+              <span className="text-xs text-whatsapp-textSecondary">
+                {isLoadingMessages ? 'Carregando...' : isRedisConnected ? 'Sincronizado' : 'Offline'}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
       
      <a 

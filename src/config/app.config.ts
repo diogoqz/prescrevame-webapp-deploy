@@ -3,7 +3,7 @@ export const AppConfig = {
   company: {
     name: "PrescrevaMe",
     fullName: "PrescrevaMe - Assistente Médico",
-    description: "Sua plataforma de assistência médica inteligente",
+    description: "IA clínica feita por médicos, para médicos. Simples, rápida, confiável.",
     copyright: "© PrescrevaMe. Todos os direitos reservados.",
     supportWhatsapp: "556392437559",
   },
