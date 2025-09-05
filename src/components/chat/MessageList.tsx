@@ -1,14 +1,24 @@
-
 import React, { useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Message } from '@/types/Message';
+import LoadingAnimation from './LoadingAnimation';
+import SuggestionChips from './SuggestionChips';
 
 interface MessageListProps {
   messages: Message[];
   isTyping: boolean;
   handleButtonClick: (buttonId: string, buttonLabel: string) => Promise<void>;
+  onSuggestionClick?: (suggestion: string) => void;
+  showSuggestions?: boolean;
 }
 
-const MessageList: React.FC<MessageListProps> = ({ messages, isTyping, handleButtonClick }) => {
+const MessageList: React.FC<MessageListProps> = ({ 
+  messages, 
+  isTyping, 
+  handleButtonClick, 
+  onSuggestionClick,
+  showSuggestions = false 
+}) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -29,6 +39,27 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isTyping, handleBut
     });
   };
 
+  const formatMessage = (text: string) => {
+    // Primeiro, processa as tags HTML existentes
+    const parts = text.split(/(<strong>.*?<\/strong>)/).map((part, index) => {
+      if (part.startsWith('<strong>') && part.endsWith('</strong>')) {
+        const content = part.replace(/<\/?strong>/g, '');
+        return <strong key={index} className="font-bold">{content}</strong>;
+      }
+      // Processa asteriscos para negrito
+      return part.split(/(\*[^*]+\*)/).map((subPart, subIndex) => {
+        if (subPart.startsWith('*') && subPart.endsWith('*')) {
+          const content = subPart.slice(1, -1);
+          return <strong key={`${index}-${subIndex}`} className="font-bold">{content}</strong>;
+        }
+        return <span key={`${index}-${subIndex}`}>{subPart}</span>;
+      });
+    });
+
+    // Flatten o array resultante
+    return parts.flat();
+  };
+
   return (
     <div 
       className="flex-1 p-4 overflow-y-auto chat-scrollbar"
@@ -37,17 +68,27 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isTyping, handleBut
         backgroundSize: "200px 200px"
       }}
     >
-      {messages.map((message) => (
-        <div 
-          key={message.id}
-          className={`flex mb-4 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-        >
-          <div 
-            className={`max-w-[80%] rounded-lg px-3 py-2 animate-message-appear
-              ${message.sender === 'user' 
-                ? 'bg-whatsapp-bubbleSent chat-bubble-sent' 
-                : 'bg-whatsapp-bubbleReceived chat-bubble-received'}`}
+      <AnimatePresence>
+        {messages.map((message) => (
+          <motion.div 
+            key={message.id}
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            transition={{ 
+              duration: 0.3,
+              ease: "easeOut"
+            }}
+            className={`flex mb-4 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
           >
+            <motion.div 
+              className={`max-w-[80%] rounded-lg px-3 py-2
+                ${message.sender === 'user' 
+                  ? 'bg-whatsapp-bubbleSent chat-bubble-sent' 
+                  : 'bg-whatsapp-bubbleReceived chat-bubble-received'}`}
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.2 }}
+            >
             {message.image && (
               <div className="mb-2 rounded overflow-hidden">
                 <img 
@@ -58,10 +99,9 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isTyping, handleBut
               </div>
             )}
             
-            <div 
-              className="text-whatsapp-text whitespace-pre-line"
-              dangerouslySetInnerHTML={{ __html: message.text }}
-            />
+            <div className="text-whatsapp-text whitespace-pre-line">
+              {formatMessage(message.text)}
+            </div>
             
             {message.buttons && message.buttons.length > 0 && (
               <div className="mt-3 space-y-2">
@@ -82,20 +122,22 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isTyping, handleBut
                 {formatTime(message.timestamp)}
               </span>
             </div>
-          </div>
-        </div>
-      ))}
+            </motion.div>
+          </motion.div>
+        ))}
+      </AnimatePresence>
       
       {isTyping && (
         <div className="flex mb-4 justify-start">
-          <div className="bg-whatsapp-bubbleReceived rounded-lg px-4 py-3 chat-bubble-received">
-            <div className="flex items-center space-x-1">
-              <span className="w-2 h-2 bg-whatsapp-textSecondary rounded-full animate-typing-dot-1"></span>
-              <span className="w-2 h-2 bg-whatsapp-textSecondary rounded-full animate-typing-dot-2"></span>
-              <span className="w-2 h-2 bg-whatsapp-textSecondary rounded-full animate-typing-dot-3"></span>
-            </div>
-          </div>
+          <LoadingAnimation isTyping={isTyping} />
         </div>
+      )}
+      
+      {showSuggestions && onSuggestionClick && (
+        <SuggestionChips 
+          onSuggestionClick={onSuggestionClick}
+          disabled={isTyping}
+        />
       )}
       
       <div ref={messagesEndRef} />

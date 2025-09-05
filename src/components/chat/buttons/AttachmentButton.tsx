@@ -6,11 +6,13 @@ import { Button } from '@/components/ui/button';
 interface AttachmentButtonProps {
   onImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   isDisabled: boolean;
+  disabledTitle?: string;
 }
 
 export const AttachmentButton = ({
   onImageUpload,
-  isDisabled
+  isDisabled,
+  disabledTitle
 }: AttachmentButtonProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -29,6 +31,7 @@ export const AttachmentButton = ({
           ? 'text-gray-400 cursor-not-allowed'
           : 'text-whatsapp-textSecondary hover:text-prescrevame hover:bg-whatsapp-inputBg'
         } transition-all duration-300`}
+        title={isDisabled ? (disabledTitle || 'Indisponível') : 'Anexar imagem'}
       >
         <Paperclip size={24} />
       </Button>

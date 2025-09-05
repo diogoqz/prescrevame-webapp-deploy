@@ -6,9 +6,14 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
-import { usePWA } from "@/hooks/usePWA";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
+import Trial from "./pages/Trial";
+import Admin from "./pages/Admin";
+import AdminUsers from "./pages/AdminUsers";
+import AdminInteractions from "./pages/AdminInteractions";
+import AdminLogin from "./pages/AdminLogin";
+import AdminProtectedRoute from "./components/AdminProtectedRoute";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,9 +34,6 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 };
 
 const App = () => {
-  // Initialize PWA hook
-  usePWA();
-
   useEffect(() => {
     const hideBadge = () => {
       const badge = document.getElementById("lovable-badge");
@@ -66,6 +68,23 @@ const AppContent = () => {
       <BrowserRouter>
         <Routes>
           <Route path="/auth" element={<Auth />} />
+          <Route path="/trial" element={<Trial />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin" element={
+            <AdminProtectedRoute>
+              <Admin />
+            </AdminProtectedRoute>
+          } />
+          <Route path="/admin/usuarios" element={
+            <AdminProtectedRoute>
+              <AdminUsers />
+            </AdminProtectedRoute>
+          } />
+          <Route path="/admin/interacoes" element={
+            <AdminProtectedRoute>
+              <AdminInteractions />
+            </AdminProtectedRoute>
+          } />
           <Route path="/" element={
             <ProtectedRoute>
               <Index />

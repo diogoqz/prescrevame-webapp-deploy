@@ -8,22 +8,6 @@ export const AppConfig = {
     supportWhatsapp: "556392437559",
   },
 
-  // PWA Configuration
-  pwa: {
-    name: "PrescrevaMe - Assistente Médico",
-    shortName: "PrescrevaMe",
-    description: "Sua plataforma de assistência médica inteligente",
-    backgroundColor: "#0D1418",
-    themeColor: "#57D789",
-    installPrompt: {
-      title: "💫 Instale o PrescrevaMe",
-      description: "Tenha acesso rápido ao seu assistente médico!",
-      buttonText: "Instalar App",
-      successTitle: "✨ Instalação concluída!",
-      successMessage: "O PrescrevaMe agora está disponível no seu dispositivo.",
-    }
-  },
-
   // Chat Configuration
   chat: {
     desktop: {
@@ -88,5 +72,11 @@ export const AppConfig = {
       enabled: false,
       developmentMessage: "Funcionalidade em desenvolvimento.",
     },
+  },
+
+  // Webhooks
+  webhooks: {
+    // Defina a URL do webhook de trial (ex.: Zapier, Make, seu backend)
+    trial: "https://srv-n8n.rtp53d.easypanel.host/webhook/bdb16435-5b9b-4d29-bd1f-50e2c5280217",
   },
 } as const;

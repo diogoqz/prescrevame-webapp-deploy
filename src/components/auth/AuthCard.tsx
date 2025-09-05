@@ -6,37 +6,39 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Eye, EyeOff, LogIn, UserPlus, MessageCircle, Mail } from 'lucide-react';
 import PasswordReset from './PasswordReset';
-import MagicLink from './MagicLink';
 
 interface AuthCardProps {
   authMode: 'login' | 'signup';
   email: string;
   password: string;
+  inviteCode?: string;
   showPassword: boolean;
   onEmailChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onPasswordChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onInviteCodeChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onTogglePassword: () => void;
   onSubmit: (e: React.FormEvent) => void;
   onModeChange: () => void;
   onSupport: () => void;
 }
 
-type AuthView = 'main' | 'reset-password' | 'magic-link';
+type AuthView = 'main' | 'reset-password';
 
 const AuthCard: React.FC<AuthCardProps> = ({
   authMode,
   email,
   password,
+  inviteCode,
   showPassword,
   onEmailChange,
   onPasswordChange,
+  onInviteCodeChange,
   onTogglePassword,
   onSubmit,
   onModeChange,
   onSupport,
 }) => {
   const [currentView, setCurrentView] = useState<AuthView>('main');
-  const [fullName, setFullName] = useState('');
   
   if (currentView === 'reset-password') {
     return (
@@ -48,15 +50,7 @@ const AuthCard: React.FC<AuthCardProps> = ({
     );
   }
   
-  if (currentView === 'magic-link') {
-    return (
-      <Card className="bg-whatsapp-bubbleReceived/95 border-none">
-        <CardContent className="pt-6">
-          <MagicLink onBack={() => setCurrentView('main')} />
-        </CardContent>
-      </Card>
-    );
-  }
+
 
   return (
     <Card className="bg-whatsapp-bubbleReceived/95 border-none">
@@ -77,7 +71,7 @@ const AuthCard: React.FC<AuthCardProps> = ({
         <CardDescription className="text-gray-300">
           {authMode === 'login'
             ? "Faça login para acessar sua conta"
-            : "Crie uma conta para começar"
+            : "Crie uma conta com código de convite"
           }
         </CardDescription>
       </CardHeader>
@@ -85,14 +79,15 @@ const AuthCard: React.FC<AuthCardProps> = ({
         <form onSubmit={onSubmit} className="space-y-4">
           {authMode === 'signup' && (
             <div className="space-y-2">
-              <Label htmlFor="fullName" className="text-gray-300">Nome Completo</Label>
+              <Label htmlFor="inviteCode" className="text-gray-300">Código de Convite</Label>
               <Input
-                id="fullName"
+                id="inviteCode"
                 type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
+                value={inviteCode || ''}
+                onChange={onInviteCodeChange}
+                required
                 className="bg-whatsapp-inputBg border-none text-white placeholder:text-gray-400"
-                placeholder="Seu nome completo"
+                placeholder="PRESCREVAME-2024-XXX"
               />
             </div>
           )}
@@ -162,16 +157,7 @@ const AuthCard: React.FC<AuthCardProps> = ({
             </div>
           </div>
           
-          {/* Link Mágico */}
-          <Button 
-            type="button"
-            variant="outline"
-            className="w-full border-gray-600 bg-transparent hover:bg-whatsapp-inputBg text-white"
-            onClick={() => setCurrentView('magic-link')}
-          >
-            <Mail className="mr-2 h-4 w-4" />
-            Link Mágico
-          </Button>
+
         </form>
       </CardContent>
       <CardFooter className="flex flex-col space-y-4 pt-2">
@@ -183,7 +169,7 @@ const AuthCard: React.FC<AuthCardProps> = ({
                 onClick={onModeChange}
                 className="text-prescrevame hover:text-prescrevame-light font-medium transition-colors"
               >
-                Cadastre-se
+                Cadastre-se com Convite
               </button>
             </>
           ) : (

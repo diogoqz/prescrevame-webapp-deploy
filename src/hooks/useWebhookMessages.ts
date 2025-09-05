@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Message } from '@/types/Message';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,18 +5,108 @@ import { supabase } from '@/integrations/supabase/client';
 export const useWebhookMessages = () => {
   const [isTyping, setIsTyping] = useState(false);
 
-  const formatMessage = (text: string): string => {
-    // Replace escaped characters and format markdown-style text
+  const formatMessage = (text: string | any): string => {
+    // Se não for string, tenta converter para string de forma segura
+    if (typeof text !== 'string') {
+      try {
+        if (text === null || text === undefined) {
+          return '';
+        }
+        if (typeof text === 'object') {
+          // Tenta extrair mensagem de várias propriedades comuns
+          const possibleMessages = [
+            text.message,
+            text.text,
+            text.content,
+            text.reply,
+            text.response
+          ].filter(Boolean);
+          
+          if (possibleMessages.length > 0) {
+            return possibleMessages[0].toString();
+          }
+          // Se não encontrar nenhuma propriedade conhecida, converte o objeto inteiro
+          return JSON.stringify(text, null, 2);
+        }
+        return String(text);
+      } catch (err) {
+        console.error('Error formatting message:', err);
+        return 'Erro ao processar a mensagem.';
+      }
+    }
+    
+    // Processa a string normalmente
     return text
       .replace(/\\n/g, '\n')
       .replace(/\\"/g, '"')
-      .replace(/\*([^*]+)\*/g, '<strong>$1</strong>')
-      .replace(/_([^_]+)_/g, '<em>$1</em>');
+      .replace(/_([^_]+)_/g, '<em>$1</em>')
+      .trim();
+  };
+
+  const processResponse = (response: any, currentTimestamp: Date): Message[] => {
+    const messages: Message[] = [];
+    let delayIndex = 0;
+
+    try {
+      // Se a resposta for um objeto com replies
+      if (response && Array.isArray(response.replies)) {
+        response.replies.forEach((reply: string, index: number) => {
+          messages.push({
+            id: `${Date.now()}-${index}`,
+            text: reply,
+            sender: 'bot',
+            timestamp: new Date(currentTimestamp.getTime() + (index * 1000))
+          });
+        });
+        return messages;
+      }
+
+      // Se a resposta for uma string ou um objeto simples
+      if (typeof response === 'string' || typeof response === 'object') {
+        const text = formatMessage(response);
+        if (text) {
+          messages.push({
+            id: `${Date.now()}-0`,
+            text: text,
+            sender: 'bot',
+            timestamp: new Date(currentTimestamp.getTime() + (delayIndex * 1000))
+          });
+        }
+        return messages;
+      }
+
+      // Se a resposta for um array
+      if (Array.isArray(response)) {
+        response.forEach((item, index) => {
+          const text = formatMessage(item);
+          if (text) {
+            messages.push({
+              id: `${Date.now()}-${index}`,
+              text: text,
+              sender: 'bot',
+              timestamp: new Date(currentTimestamp.getTime() + (index * 1000))
+            });
+          }
+        });
+        return messages;
+      }
+
+    } catch (err) {
+      console.error('Error processing response:', err);
+      messages.push({
+        id: Date.now().toString(),
+        text: 'Erro ao processar a resposta.',
+        sender: 'bot',
+        timestamp: currentTimestamp
+      });
+    }
+
+    return messages;
   };
 
   const sendMessageToWebhook = async (formData: FormData) => {
     setIsTyping(true);
-    const messages: Message[] = [];
+    let messages: Message[] = [];
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -35,16 +124,14 @@ export const useWebhookMessages = () => {
         });
       }
 
-      // Atualizar o objeto de dados para incluir a imagem como base64 e o sessionId
       const data = {
-        message: formData.get('message'),
+        message: (formData.get('message') || '').toString(),
         image: imageBase64,
         sessionId: userEmail || 'anonymous'
       };
 
-      console.log('Sending data to webhook:', data);
-
-      const response = await fetch('https://app-n8n.icogub.easypanel.host/webhook/f54cf431-4260-4e9f-ac60-c7d5feab9c35', {
+      const webhookUrl = import.meta.env.VITE_WEBHOOK_URL || 'https://app-n8n.3gbyjx.easypanel.host/webhook/web-pme';
+      const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -57,87 +144,16 @@ export const useWebhookMessages = () => {
       }
 
       const responseData = await response.json();
-      console.log('Response from webhook:', responseData);
+      messages = processResponse(responseData, new Date());
 
-      const currentTimestamp = new Date();
-      
-      // Primeiro, verifique se responseData é um array
-      if (Array.isArray(responseData)) {
-        let delayIndex = 0;
-        
-        // Processar cada item do array
-        for (let i = 0; i < responseData.length; i++) {
-          const item = responseData[i];
-          
-          if (item && typeof item === 'object' && item.result) {
-            try {
-              const parsedResult = JSON.parse(item.result);
-              
-              // Caso 1: Se temos um campo "reply" único
-              if (parsedResult.reply) {
-                messages.push({
-                  id: `${Date.now()}-${i}`,
-                  text: formatMessage(parsedResult.reply),
-                  sender: 'bot',
-                  timestamp: new Date(currentTimestamp.getTime() + (delayIndex * 1000))
-                });
-                delayIndex++;
-              }
-              // Caso 2: Se temos um array de "replies"
-              else if (parsedResult.replies && Array.isArray(parsedResult.replies)) {
-                parsedResult.replies.forEach((reply: string, replyIndex: number) => {
-                  messages.push({
-                    id: `${Date.now()}-${i}-${replyIndex}`,
-                    text: formatMessage(reply),
-                    sender: 'bot',
-                    timestamp: new Date(currentTimestamp.getTime() + (delayIndex * 1000))
-                  });
-                  delayIndex++;
-                });
-              }
-            } catch (err) {
-              console.error('Error parsing result JSON:', err, item.result);
-              messages.push({
-                id: `${Date.now()}-${i}`,
-                text: typeof item.result === 'string' ? formatMessage(item.result) : JSON.stringify(item.result),
-                sender: 'bot',
-                timestamp: new Date(currentTimestamp.getTime() + (delayIndex * 1000))
-              });
-              delayIndex++;
-            }
-          }
-        }
-      } 
-      // Caso a resposta não seja um array, mas um objeto direto com campo reply
-      else if (responseData && typeof responseData === 'object') {
-        if (responseData.reply) {
-          messages.push({
-            id: Date.now().toString(),
-            text: formatMessage(responseData.reply),
-            sender: 'bot',
-            timestamp: currentTimestamp
-          });
-        }
-        // Caso tenha um array de replies
-        else if (responseData.replies && Array.isArray(responseData.replies)) {
-          responseData.replies.forEach((reply: string, index: number) => {
-            messages.push({
-              id: `${Date.now()}-${index}`,
-              text: formatMessage(reply),
-              sender: 'bot',
-              timestamp: new Date(currentTimestamp.getTime() + (index * 1000))
-            });
-          });
-        }
-      }
     } catch (error) {
       console.error('Error sending message to webhook:', error);
-      messages.push({
+      messages = [{
         id: Date.now().toString(),
         text: "Ocorreu um erro ao enviar sua mensagem. Por favor, tente novamente.",
         sender: 'bot',
         timestamp: new Date()
-      });
+      }];
     } finally {
       setTimeout(() => {
         setIsTyping(false);

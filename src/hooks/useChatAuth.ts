@@ -1,9 +1,8 @@
-
 import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 
-export type LoginStep = 'idle' | 'email' | 'password';
+export type LoginStep = 'idle' | 'email' | 'password' | 'invite';
 
 interface Message {
   id: string;
@@ -19,11 +18,12 @@ interface MessageButton {
 }
 
 export const useChatAuth = () => {
-  const { user, signIn, signUp, signOut } = useAuth();
+  const { user, signIn, signUp, signOut, validateInviteCode } = useAuth();
   const { toast } = useToast();
   const [loginStep, setLoginStep] = useState<LoginStep>('idle');
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
+  const [loginInviteCode, setLoginInviteCode] = useState('');
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const [showPassword, setShowPassword] = useState(false);
 
@@ -35,14 +35,25 @@ export const useChatAuth = () => {
       timestamp: new Date()
     }];
 
-    if (buttonId === 'login' || buttonId === 'signup') {
-      setAuthMode(buttonId as 'login' | 'signup');
+    if (buttonId === 'login') {
+      setAuthMode('login');
       setLoginStep('email');
-      const actionText = buttonId === 'login' ? 'fazer login' : 'se cadastrar';
       
       messages.push({
         id: (Date.now() + 1).toString(),
-        text: `Por favor, digite seu email para ${actionText}:`,
+        text: 'Por favor, digite seu email para fazer login:',
+        sender: 'bot',
+        timestamp: new Date()
+      });
+    }
+
+    if (buttonId === 'signup') {
+      setAuthMode('signup');
+      setLoginStep('invite');
+      
+      messages.push({
+        id: (Date.now() + 1).toString(),
+        text: 'Para se cadastrar, você precisa de um código de convite. Por favor, digite o código que você recebeu:',
         sender: 'bot',
         timestamp: new Date()
       });
@@ -51,12 +62,12 @@ export const useChatAuth = () => {
     if (buttonId === 'info') {
       messages.push({
         id: (Date.now() + 1).toString(),
-        text: 'O PrescrevaMe é um assistente virtual especializado em auxiliar profissionais de saúde. Para utilizar nossos serviços, é necessário fazer login ou se cadastrar.',
+        text: 'O PrescrevaMe é um assistente virtual especializado em auxiliar profissionais de saúde. Para utilizar nossos serviços, é necessário fazer login ou se cadastrar com um código de convite.',
         sender: 'bot',
         timestamp: new Date(),
         buttons: [
           { id: 'login', label: 'Login' },
-          { id: 'signup', label: 'Cadastro' }
+          { id: 'signup', label: 'Cadastro com Convite' }
         ]
       });
     }
@@ -80,6 +91,46 @@ export const useChatAuth = () => {
       return [true, messages];
     }
     
+    if (loginStep === 'invite') {
+      try {
+        const isValid = await validateInviteCode(message);
+        if (!isValid) {
+          messages.push({
+            id: Date.now().toString(),
+            text: 'Código de convite inválido ou já utilizado. Por favor, tente novamente:',
+            sender: 'bot',
+            timestamp: new Date(),
+            buttons: [
+              { id: 'signup', label: 'Cadastro com Convite' }
+            ]
+          });
+          return [true, messages];
+        }
+        
+        setLoginInviteCode(message);
+        setLoginStep('email');
+        
+        messages.push({
+          id: Date.now().toString(),
+          text: 'Código de convite válido! Agora, digite seu email:',
+          sender: 'bot',
+          timestamp: new Date()
+        });
+        return [true, messages];
+      } catch (error) {
+        messages.push({
+          id: Date.now().toString(),
+          text: 'Erro ao validar código. Por favor, tente novamente:',
+          sender: 'bot',
+          timestamp: new Date(),
+          buttons: [
+            { id: 'signup', label: 'Cadastro com Convite' }
+          ]
+        });
+        return [true, messages];
+      }
+    }
+    
     if (loginStep === 'password') {
       setLoginPassword(message);
       try {
@@ -88,9 +139,10 @@ export const useChatAuth = () => {
           toast({
             title: "Sucesso!",
             description: "Login realizado com sucesso.",
+            duration: 500
           });
         } else {
-          await signUp(loginEmail, message);
+          await signUp(loginEmail, message, loginInviteCode);
           toast({
             title: "Sucesso!",
             description: "Cadastro realizado com sucesso. Verifique seu email.",
@@ -99,6 +151,7 @@ export const useChatAuth = () => {
         setLoginStep('idle');
         setLoginEmail('');
         setLoginPassword('');
+        setLoginInviteCode('');
         return [true, messages];
       } catch (error) {
         toast({
@@ -109,6 +162,7 @@ export const useChatAuth = () => {
         setLoginStep('idle');
         setLoginEmail('');
         setLoginPassword('');
+        setLoginInviteCode('');
         
         messages.push({
           id: Date.now().toString(),
@@ -117,7 +171,7 @@ export const useChatAuth = () => {
           timestamp: new Date(),
           buttons: [
             { id: 'login', label: 'Login' },
-            { id: 'signup', label: 'Cadastro' }
+            { id: 'signup', label: 'Cadastro com Convite' }
           ]
         });
         return [true, messages];

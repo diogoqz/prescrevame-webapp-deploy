@@ -87,6 +87,102 @@ export type Database = {
         }
         Relationships: []
       }
+      invites: {
+        Row: {
+          id: string
+          code: string
+          email: string | null
+          used: boolean
+          used_at: string | null
+          created_at: string
+          updated_at: string
+          invite_type: string
+          days_valid: number
+          description: string | null
+        }
+        Insert: {
+          id?: string
+          code: string
+          email?: string | null
+          used?: boolean
+          used_at?: string | null
+          created_at?: string
+          updated_at?: string
+          invite_type?: string
+          days_valid?: number
+          description?: string | null
+        }
+        Update: {
+          id?: string
+          code?: string
+          email?: string | null
+          used?: boolean
+          used_at?: string | null
+          created_at?: string
+          updated_at?: string
+          invite_type?: string
+          days_valid?: number
+          description?: string | null
+        }
+        Relationships: []
+      }
+      users: {
+        Row: {
+          id: string
+          email: string
+          nome: string | null
+          status: string
+          created_at: string
+          updated_at: string
+          activated_at: string | null
+          expires_at: string | null
+          invite_type: string | null
+          days_valid: number | null
+          cpf: string | null
+          whatsapp: string | null
+          profissao: string | null
+          is_trial: boolean | null
+          trial_started_at: string | null
+          trial_expires_at: string | null
+        }
+        Insert: {
+          id?: string
+          email: string
+          nome?: string | null
+          status?: string
+          created_at?: string
+          updated_at?: string
+          activated_at?: string | null
+          expires_at?: string | null
+          invite_type?: string | null
+          days_valid?: number | null
+          cpf?: string | null
+          whatsapp?: string | null
+          profissao?: string | null
+          is_trial?: boolean | null
+          trial_started_at?: string | null
+          trial_expires_at?: string | null
+        }
+        Update: {
+          id?: string
+          email?: string
+          nome?: string | null
+          status?: string
+          created_at?: string
+          updated_at?: string
+          activated_at?: string | null
+          expires_at?: string | null
+          invite_type?: string | null
+          days_valid?: number | null
+          cpf?: string | null
+          whatsapp?: string | null
+          profissao?: string | null
+          is_trial?: boolean | null
+          trial_started_at?: string | null
+          trial_expires_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

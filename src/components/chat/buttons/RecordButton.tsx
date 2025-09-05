@@ -8,13 +8,15 @@ interface RecordButtonProps {
   isRecording: boolean;
   isProcessingAudio: boolean;
   disabled?: boolean;
+  disabledTitle?: string;
 }
 
 export const RecordButton = ({
   onToggleRecording,
   isRecording,
   isProcessingAudio,
-  disabled = false
+  disabled = false,
+  disabledTitle
 }: RecordButtonProps) => {
   return (
     <Button 
@@ -28,8 +30,8 @@ export const RecordButton = ({
         ? 'text-gray-400 cursor-not-allowed' 
         : 'text-whatsapp-textSecondary hover:text-prescrevame hover:bg-whatsapp-inputBg'
       } transition-all duration-300`}
-      aria-label={isRecording ? "Stop recording" : "Start recording"}
-      title={isRecording ? "Stop recording" : "Start recording"}
+      aria-label={disabled || isProcessingAudio ? (disabledTitle || 'Indisponível') : (isRecording ? 'Stop recording' : 'Start recording')}
+      title={disabled || isProcessingAudio ? (disabledTitle || 'Indisponível') : (isRecording ? 'Stop recording' : 'Start recording')}
     >
       {isRecording ? <MicOff size={24} /> : <Mic size={24} />}
     </Button>

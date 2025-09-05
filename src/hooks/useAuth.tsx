@@ -2,15 +2,17 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { inviteService } from '@/services/inviteService';
+import { userService } from '@/services/userService';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, fullName?: string) => Promise<void>;
+  signUp: (email: string, password: string, inviteCode: string) => Promise<void>;
   signOut: () => Promise<void>;
   sendPasswordResetEmail: (email: string) => Promise<void>;
-  sendMagicLink: (email: string) => Promise<void>;
+  validateInviteCode: (code: string) => Promise<boolean>;
   loading: boolean;
 }
 
@@ -47,19 +49,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password,
     });
     if (error) throw error;
+
+    // Verificar status do usuário após login bem-sucedido
+    const userStatus = await userService.getUserStatus(email);
+    if (userStatus === 'bloqueado') {
+      // Fazer logout do usuário bloqueado
+      await supabase.auth.signOut();
+      throw new Error('Sua conta foi bloqueada. Entre em contato com o suporte.');
+    }
   };
 
-  const signUp = async (email: string, password: string, fullName?: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
+  const signUp = async (email: string, password: string, inviteCode: string) => {
+    try {
+      // Validar código de convite
+      const invite = await inviteService.validateInviteCode(inviteCode);
+      if (!invite) {
+        throw new Error('Código de convite inválido ou já utilizado');
+      }
+
+      // Registrar usuário no Supabase Auth
+      const { error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            invite_code: inviteCode,
+          },
         },
-      },
-    });
-    if (error) throw error;
+      });
+      
+      if (signUpError) throw signUpError;
+
+      // Marcar convite como usado e criar/atualizar usuário na tabela customizada
+      const useInviteSuccess = await inviteService.useInvite(inviteCode, email);
+      if (!useInviteSuccess) {
+        throw new Error('Erro ao processar convite. Tente novamente.');
+      }
+    } catch (error) {
+      // Se houver erro, tentar reverter o cadastro no Auth se foi criado
+      throw error;
+    }
   };
 
   const signOut = async () => {
@@ -74,14 +103,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
   };
 
-  const sendMagicLink = async (email: string) => {
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: window.location.origin,
-      },
-    });
-    if (error) throw error;
+  const validateInviteCode = async (code: string): Promise<boolean> => {
+    try {
+      const invite = await inviteService.validateInviteCode(code);
+      return invite !== null;
+    } catch (error) {
+      return false;
+    }
   };
 
   return (
@@ -92,7 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signUp, 
       signOut,
       sendPasswordResetEmail,
-      sendMagicLink,
+      validateInviteCode,
       loading
     }}>
       {children}

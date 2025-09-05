@@ -3,6 +3,11 @@ import { useState, useCallback, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
+export interface AudioRecordingResult {
+  text: string | null;
+  success: boolean;
+}
+
 export const useAudioRecording = () => {
   const { toast } = useToast();
   const [isRecording, setIsRecording] = useState(false);
@@ -138,12 +143,19 @@ export const useAudioRecording = () => {
   }, [toast]);
 
   // Toggle recording state
-  const toggleRecording = useCallback(async () => {
+  const toggleRecording = useCallback(async (): Promise<AudioRecordingResult> => {
     if (isRecording) {
-      return await stopRecording();
+      const text = await stopRecording();
+      return {
+        text,
+        success: !!text
+      };
     } else {
       await startRecording();
-      return null;
+      return {
+        text: null,
+        success: false
+      };
     }
   }, [isRecording, startRecording, stopRecording]);
 

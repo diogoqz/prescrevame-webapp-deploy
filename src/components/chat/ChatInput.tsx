@@ -1,10 +1,8 @@
-
 import React, { useRef, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { LoginStep } from '@/hooks/useChatAuth';
 import { RecordButton } from './buttons/RecordButton';
-import { AttachmentButton } from './buttons/AttachmentButton';
-import { SendButton } from './buttons/SendButton';
+import { SendFileButton } from './buttons/SendFileButton';
 import { MessageInput } from './input/MessageInput';
 import { ImagePreview } from './input/ImagePreview';
 import { LoginPrompt } from './input/LoginPrompt';
@@ -13,7 +11,7 @@ import { ImageDropzone } from './input/ImageDropzone';
 interface ChatInputProps {
   inputMessage: string;
   setInputMessage: (message: string) => void;
-  onSendMessage: () => void;
+  onSendMessage: (message: string) => void;
   onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   isTyping: boolean;
   loginStep: LoginStep;
@@ -25,7 +23,10 @@ interface ChatInputProps {
   isRecording: boolean;
   isProcessingAudio?: boolean;
   user: any;
+  userStatus?: 'ativo' | 'bloqueado' | null;
+  isTrial?: boolean;
   handleButtonClick: (id: string, label: string) => void;
+  onRemoveImage: () => void;
 }
 
 export const ChatInput = ({
@@ -43,7 +44,10 @@ export const ChatInput = ({
   isRecording,
   isProcessingAudio = false,
   user,
-  handleButtonClick
+  userStatus,
+  isTrial = false,
+  handleButtonClick,
+  onRemoveImage
 }: ChatInputProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isFocused, setIsFocused] = useState(false);
@@ -56,8 +60,7 @@ export const ChatInput = ({
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-    const event = new Event('input', { bubbles: true });
-    if (fileInputRef.current) fileInputRef.current.dispatchEvent(event);
+    onImageUpload({ target: { files: null } } as React.ChangeEvent<HTMLInputElement>);
   };
   
   const handleDrop = (file: File) => {
@@ -69,9 +72,12 @@ export const ChatInput = ({
   
   const handleLogin = () => handleButtonClick('login', 'Login');
   
-  const shouldShowSendButton = (inputMessage.trim() || imagePreview) && !isRecording && !isProcessingAudio;
-  const inputDisabled = isRecording || isProcessingAudio;
-  const inputPlaceholder = isRecording 
+  const hasText = inputMessage.trim().length > 0;
+  const inputDisabled = isRecording || isProcessingAudio || userStatus === 'bloqueado';
+  const trialDisabledTitle = 'Indisponível na versão trial';
+  const inputPlaceholder = userStatus === 'bloqueado'
+    ? "Acesso bloqueado"
+    : isRecording 
     ? "Gravando áudio..." 
     : isProcessingAudio
     ? "Processando áudio..."
@@ -86,7 +92,7 @@ export const ChatInput = ({
           {imagePreview && (
             <ImagePreview 
               imageUrl={imagePreview} 
-              onRemove={removeImage} 
+              onRemove={onRemoveImage} 
             />
           )}
         </AnimatePresence>
@@ -96,20 +102,6 @@ export const ChatInput = ({
             <LoginPrompt onLogin={handleLogin} />
           ) : (
             <>
-              {/* Mic button */}
-              <RecordButton 
-                onToggleRecording={onToggleRecording}
-                isRecording={isRecording}
-                isProcessingAudio={isProcessingAudio}
-                disabled={!user} 
-              />
-              
-              {/* Attachment button */}
-              <AttachmentButton 
-                onImageUpload={onImageUpload}
-                isDisabled={inputDisabled || !user}
-              />
-              
               {/* Message input */}
               <div className={`flex-1 relative transition-all duration-300 ${isFocused ? 'scale-105' : ''}`}>
                 <MessageInput
@@ -126,15 +118,33 @@ export const ChatInput = ({
                 />
               </div>
               
-              {/* Send/Image button */}
-              <AnimatePresence mode="wait">
-                <SendButton 
-                  shouldShowSend={shouldShowSendButton}
-                  onSend={onSendMessage}
-                  onImageUpload={openFileUpload}
-                  isDisabled={isRecording || isProcessingAudio}
-                />
-              </AnimatePresence>
+              {/* Send/File button */}
+              <SendFileButton 
+                hasText={hasText}
+                hasImage={!!imagePreview}
+                onSend={() => onSendMessage(inputMessage)}
+                onFileUpload={openFileUpload}
+                isDisabled={inputDisabled || !user || isTrial}
+              />
+              
+              {/* Hidden file input */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={onImageUpload}
+                accept="image/*"
+                className="hidden"
+                disabled={inputDisabled || !user || isTrial}
+              />
+              
+              {/* Mic button */}
+              <RecordButton 
+                onToggleRecording={onToggleRecording}
+                isRecording={isRecording}
+                isProcessingAudio={isProcessingAudio}
+                disabled={!user || isTrial} 
+                disabledTitle={trialDisabledTitle}
+              />
             </>
           )}
         </div>

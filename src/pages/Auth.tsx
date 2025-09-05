@@ -4,16 +4,26 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { Card } from '@/components/ui/card';
 import AuthCard from '@/components/auth/AuthCard';
-import { Stethoscope } from 'lucide-react';
+import { Stethoscope, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [fullName, setFullName] = useState('');
+  const [inviteCode, setInviteCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, signUp, user, validateInviteCode } = useAuth();
+
+  // Verificar se há código de convite na URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const inviteFromUrl = urlParams.get('invite');
+    if (inviteFromUrl) {
+      setInviteCode(inviteFromUrl);
+      setAuthMode('signup');
+    }
+  }, []);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -34,7 +44,8 @@ const Auth = () => {
           description: "Bem-vindo de volta!",
         });
       } else {
-        await signUp(email, password, fullName);
+        // Remover validação dupla - deixar apenas a validação dentro do signUp
+        await signUp(email, password, inviteCode);
         toast({
           title: "Cadastro bem-sucedido",
           description: "Verifique seu email para confirmar seu cadastro.",
@@ -141,9 +152,11 @@ const Auth = () => {
                 authMode={authMode}
                 email={email}
                 password={password}
+                inviteCode={inviteCode}
                 showPassword={showPassword}
                 onEmailChange={(e) => setEmail(e.target.value)}
                 onPasswordChange={(e) => setPassword(e.target.value)}
+                onInviteCodeChange={(e) => setInviteCode(e.target.value)}
                 onTogglePassword={() => setShowPassword(!showPassword)}
                 onSubmit={handleSubmit}
                 onModeChange={handleModeChange}
@@ -157,12 +170,41 @@ const Auth = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1, delay: 1 }}
-          className="mt-8 text-center"
+          className="mt-8 text-center space-y-4"
         >
           <div className="flex items-center justify-center gap-2 text-gray-400">
             <Stethoscope className="h-5 w-5" />
             <span className="text-sm">Tecnologia a serviço da medicina</span>
           </div>
+          
+          {/* Botão de Trial */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 1.5 }}
+            className="bg-whatsapp-bubbleReceived border border-prescrevame/20 rounded-lg p-4 shadow-lg hover:shadow-xl transition-all duration-300"
+          >
+            {/* Banner de informação */}
+            <div className="bg-prescrevame/10 border border-prescrevame/20 rounded-lg p-3 mb-4">
+              <div className="flex items-center justify-center gap-2 text-prescrevame">
+                <Clock className="h-4 w-4" />
+                <span className="text-sm font-medium">
+                  Apenas médicos e estudantes de medicina
+                </span>
+              </div>
+            </div>
+            
+            <h3 className="text-white font-semibold mb-2 text-center">Experimente Grátis por 24 Horas!</h3>
+            <p className="text-whatsapp-textSecondary text-sm mb-4 text-center">
+              Teste completo para médicos e estudantes de medicina
+            </p>
+            <button
+              onClick={() => navigate('/trial')}
+              className="w-full bg-prescrevame hover:bg-prescrevame-dark text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              Começar Trial Gratuito
+            </button>
+          </motion.div>
         </motion.div>
       </div>
     </div>

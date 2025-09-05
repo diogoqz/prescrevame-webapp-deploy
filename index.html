@@ -9,13 +9,7 @@
     <meta name="author" content="PrescrevaMe" />
     <meta name="keywords" content="medical,healthcare,productivity,ai,assistant,prescrição médica,saúde,médico,assistente" />
     
-    <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#57D789" />
     <link rel="icon" href="/lovable-uploads/f9d8ee9c-efab-4f5c-98b5-b08a1a131d86.png" />
-    <link rel="apple-touch-icon" href="/lovable-uploads/f9d8ee9c-efab-4f5c-98b5-b08a1a131d86.png" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="PrescrevaMe" />
     
     <meta property="og:title" content="PrescrevaMe - Assistente Médico" />
     <meta property="og:description" content="Sua plataforma de assistência médica inteligente" />
@@ -42,25 +36,6 @@
   <body>
     <div id="root"></div>
     <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/service-worker.js')
-            .then((registration) => {
-              console.log('ServiceWorker registrado com sucesso');
-            })
-            .catch((err) => {
-              console.log('Erro ao registrar ServiceWorker: ', err);
-            });
-        });
-      } else {
-        console.log('ServiceWorker não suportado neste navegador');
-      }
-      
-      // Detecta se o app está instalado
-      window.addEventListener('appinstalled', (evt) => {
-        console.log('PrescrevaMe foi instalado com sucesso!');
-      });
-      
       setTimeout(() => {
         const badge = document.getElementById('lovable-badge');
         if (badge) badge.style.display = 'none';
