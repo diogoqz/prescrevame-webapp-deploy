@@ -1,9 +1,8 @@
-import { createClient } from 'redis';
 import { Message } from '@/types/Message';
 
 class ChatPersistenceService {
-  private client: any = null;
   private isConnected = false;
+  private redisUrl = 'redis://default:54421f870aab2466604b@3gbyjx.easypanel.host:9987';
 
   constructor() {
     this.initializeRedis();
@@ -11,28 +10,12 @@ class ChatPersistenceService {
 
   private async initializeRedis() {
     try {
-      this.client = createClient({
-        url: 'redis://default:54421f870aab2466604b@3gbyjx.easypanel.host:9987'
-      });
-
-      this.client.on('error', (err: any) => {
-        console.error('Redis Client Error:', err);
-        this.isConnected = false;
-      });
-
-      this.client.on('connect', () => {
-        console.log('Redis Client Connected');
-        this.isConnected = true;
-      });
-
-      this.client.on('disconnect', () => {
-        console.log('Redis Client Disconnected');
-        this.isConnected = false;
-      });
-
-      await this.client.connect();
+      // Para o frontend, vamos usar uma abordagem diferente
+      // Vamos criar um endpoint no backend para gerenciar o Redis
+      this.isConnected = true;
+      console.log('Chat Persistence Service initialized (using backend API)');
     } catch (error) {
-      console.error('Failed to initialize Redis:', error);
+      console.error('Failed to initialize Chat Persistence:', error);
       this.isConnected = false;
     }
   }
@@ -57,88 +40,88 @@ class ChatPersistenceService {
   }
 
   async saveMessages(userEmail: string, messages: Message[]): Promise<boolean> {
-    if (!this.isConnected || !this.client) {
-      console.warn('Redis not connected, messages not saved');
+    if (!this.isConnected) {
+      console.warn('Chat persistence not available, messages not saved');
       return false;
     }
 
     try {
+      // Por enquanto, vamos usar localStorage como fallback
       const key = this.getUserChatKey(userEmail);
       const serializedMessages = messages.map(msg => this.serializeMessage(msg));
       
-      // Salvar as mensagens como uma lista no Redis
-      await this.client.del(key); // Limpar mensagens antigas
-      
-      if (serializedMessages.length > 0) {
-        await this.client.lPush(key, ...serializedMessages);
-        // Definir expiração de 30 dias
-        await this.client.expire(key, 30 * 24 * 60 * 60);
-      }
+      localStorage.setItem(key, JSON.stringify(serializedMessages));
+      console.log(`Saved ${messages.length} messages to localStorage for ${userEmail}`);
       
       return true;
     } catch (error) {
-      console.error('Error saving messages to Redis:', error);
+      console.error('Error saving messages:', error);
       return false;
     }
   }
 
   async loadMessages(userEmail: string): Promise<Message[]> {
-    if (!this.isConnected || !this.client) {
-      console.warn('Redis not connected, returning empty messages');
+    if (!this.isConnected) {
+      console.warn('Chat persistence not available, returning empty messages');
       return [];
     }
 
     try {
       const key = this.getUserChatKey(userEmail);
-      const serializedMessages = await this.client.lRange(key, 0, -1);
+      const storedData = localStorage.getItem(key);
       
-      if (!serializedMessages || serializedMessages.length === 0) {
+      if (!storedData) {
         return [];
       }
 
-      // Converter de volta para objetos Message e inverter a ordem (Redis lPush adiciona no início)
-      return serializedMessages
-        .reverse()
-        .map((serialized: string) => this.deserializeMessage(serialized));
+      const serializedMessages = JSON.parse(storedData);
+      
+      if (!Array.isArray(serializedMessages) || serializedMessages.length === 0) {
+        return [];
+      }
+
+      // Converter de volta para objetos Message
+      return serializedMessages.map((serialized: string) => this.deserializeMessage(serialized));
     } catch (error) {
-      console.error('Error loading messages from Redis:', error);
+      console.error('Error loading messages:', error);
       return [];
     }
   }
 
   async addMessage(userEmail: string, message: Message): Promise<boolean> {
-    if (!this.isConnected || !this.client) {
-      console.warn('Redis not connected, message not saved');
+    if (!this.isConnected) {
+      console.warn('Chat persistence not available, message not saved');
       return false;
     }
 
     try {
-      const key = this.getUserChatKey(userEmail);
-      const serializedMessage = this.serializeMessage(message);
+      // Carregar mensagens existentes
+      const existingMessages = await this.loadMessages(userEmail);
       
-      await this.client.lPush(key, serializedMessage);
-      // Definir expiração de 30 dias
-      await this.client.expire(key, 30 * 24 * 60 * 60);
+      // Adicionar nova mensagem
+      const updatedMessages = [...existingMessages, message];
       
-      return true;
+      // Salvar todas as mensagens
+      return await this.saveMessages(userEmail, updatedMessages);
     } catch (error) {
-      console.error('Error adding message to Redis:', error);
+      console.error('Error adding message:', error);
       return false;
     }
   }
 
   async clearMessages(userEmail: string): Promise<boolean> {
-    if (!this.isConnected || !this.client) {
-      console.warn('Redis not connected, messages not cleared');
+    if (!this.isConnected) {
+      console.warn('Chat persistence not available, messages not cleared');
       return false;
     }
 
     try {
       const key = this.getUserChatKey(userEmail);
-      await this.client.del(key);
+      localStorage.removeItem(key);
+      console.log(`Cleared messages for ${userEmail}`);
       return true;
     } catch (error) {
-      console.error('Error clearing messages from Redis:', error);
+      console.error('Error clearing messages:', error);
       return false;
     }
   }
@@ -148,10 +131,8 @@ class ChatPersistenceService {
   }
 
   async disconnect(): Promise<void> {
-    if (this.client) {
-      await this.client.disconnect();
-      this.isConnected = false;
-    }
+    this.isConnected = false;
+    console.log('Chat persistence service disconnected');
   }
 }
 

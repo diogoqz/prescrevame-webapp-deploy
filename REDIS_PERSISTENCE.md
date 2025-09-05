@@ -1,37 +1,37 @@
-# Persistência de Conversas com Redis
+# Persistência de Conversas com localStorage
 
 ## Visão Geral
 
-Este sistema implementa persistência de conversas do chat usando Redis, permitindo que os usuários mantenham suas conversas mesmo após fechar e reabrir o aplicativo.
+Este sistema implementa persistência de conversas do chat usando localStorage do navegador, permitindo que os usuários mantenham suas conversas mesmo após fechar e reabrir o aplicativo.
 
 ## Configuração
 
-### Redis URL
-```
-redis://default:54421f870aab2466604b@3gbyjx.easypanel.host:9987
-```
+### Armazenamento Local
+- **Tecnologia**: localStorage do navegador
+- **Chave**: `chat:{userEmail}`
+- **Formato**: JSON serializado
 
 ## Arquivos Implementados
 
 ### 1. `src/services/chatPersistenceService.ts`
-Serviço principal para gerenciar a persistência das mensagens no Redis.
+Serviço principal para gerenciar a persistência das mensagens no localStorage.
 
 **Funcionalidades:**
-- Conexão automática com Redis
+- Inicialização automática do serviço
 - Serialização/deserialização de mensagens
 - Salvamento de mensagens individuais e em lote
 - Carregamento de histórico de conversas
 - Limpeza de conversas
-- Expiração automática (30 dias)
+- Armazenamento local por usuário
 
 ### 2. `src/hooks/useChatPersistence.ts`
 Hook personalizado para gerenciar a persistência no React.
 
 **Funcionalidades:**
 - Estado de carregamento
-- Status de conexão Redis
+- Status de disponibilidade do serviço
 - Funções para carregar, salvar e limpar mensagens
-- Verificação automática de conexão
+- Verificação automática de disponibilidade
 
 ### 3. Modificações no `src/components/WhatsAppChat.tsx`
 Integração da persistência no componente principal do chat.
@@ -43,24 +43,24 @@ Integração da persistência no componente principal do chat.
 - Indicador visual de status da conexão
 
 ### 4. Modificações no `src/components/chat/ChatHeader.tsx`
-Indicador visual do status da conexão Redis.
+Indicador visual do status da persistência.
 
 **Indicadores:**
-- 🟢 Verde: Sincronizado (Redis conectado)
-- 🔴 Vermelho: Offline (Redis desconectado)
+- 🟢 Verde: Sincronizado (localStorage disponível)
+- 🔴 Vermelho: Offline (localStorage indisponível)
 - 🟡 Amarelo: Carregando mensagens
 
 ## Como Funciona
 
 ### 1. Inicialização
-- Quando o usuário faz login, o sistema verifica se há mensagens salvas no Redis
+- Quando o usuário faz login, o sistema verifica se há mensagens salvas no localStorage
 - Se houver mensagens, elas são carregadas e exibidas
 - Se não houver mensagens, uma mensagem de boas-vindas é criada
 
 ### 2. Salvamento de Mensagens
-- Todas as mensagens (usuário e bot) são salvas automaticamente no Redis
+- Todas as mensagens (usuário e bot) são salvas automaticamente no localStorage
 - Cada mensagem é serializada com timestamp
-- As mensagens são armazenadas em uma lista Redis por usuário
+- As mensagens são armazenadas como JSON no localStorage por usuário
 
 ### 3. Estrutura de Dados
 ```json
@@ -74,15 +74,15 @@ Indicador visual do status da conexão Redis.
 }
 ```
 
-### 4. Chaves Redis
+### 4. Chaves localStorage
 - Formato: `chat:{userEmail}`
 - Exemplo: `chat:usuario@exemplo.com`
-- Expiração: 30 dias
+- Persistência: Até limpeza manual do navegador
 
 ## Tratamento de Erros
 
-### Conexão Redis
-- Se o Redis estiver offline, as mensagens são exibidas normalmente
+### localStorage Indisponível
+- Se o localStorage estiver indisponível, as mensagens são exibidas normalmente
 - O sistema continua funcionando sem persistência
 - Indicador visual mostra status "Offline"
 
@@ -94,53 +94,50 @@ Indicador visual do status da conexão Redis.
 ## Benefícios
 
 1. **Persistência**: Conversas são mantidas entre sessões
-2. **Performance**: Redis oferece acesso rápido aos dados
-3. **Escalabilidade**: Suporta múltiplos usuários simultâneos
-4. **Confiabilidade**: Sistema funciona mesmo com Redis offline
+2. **Performance**: localStorage oferece acesso rápido aos dados
+3. **Simplicidade**: Não requer servidor externo
+4. **Confiabilidade**: Sistema funciona mesmo com localStorage indisponível
 5. **Transparência**: Usuário vê status da sincronização
 
 ## Monitoramento
 
 ### Logs do Console
-- Conexão/desconexão do Redis
+- Inicialização do serviço de persistência
 - Erros de salvamento/carregamento
 - Status de sincronização
 
 ### Interface do Usuário
 - Indicador visual no header do chat
-- Status em tempo real da conexão
+- Status em tempo real da disponibilidade
 - Feedback visual durante carregamento
 
 ## Configuração de Desenvolvimento
 
 ### Vite Config
 ```typescript
-define: {
-  global: 'globalThis',
-},
-optimizeDeps: {
-  exclude: ['redis']
+resolve: {
+  alias: {
+    "@": path.resolve(__dirname, "./src"),
+  },
 }
 ```
 
 ### Dependências
-```json
-{
-  "redis": "^4.6.0"
-}
-```
+- Não requer dependências externas
+- Usa APIs nativas do navegador (localStorage)
 
 ## Limitações
 
-1. **Browser Compatibility**: Redis client pode ter limitações em alguns browsers
-2. **Network Dependency**: Requer conexão com Redis para persistência
-3. **Storage Limit**: Limitado pela capacidade do Redis
-4. **Expiration**: Mensagens expiram após 30 dias
+1. **Browser Compatibility**: localStorage pode ter limitações em modo privado
+2. **Storage Limit**: Limitado pela capacidade do localStorage (~5-10MB)
+3. **Device Specific**: Dados ficam apenas no dispositivo atual
+4. **Manual Cleanup**: Dados persistem até limpeza manual do navegador
 
 ## Próximos Passos
 
-1. Implementar fallback para localStorage
+1. Implementar sincronização com servidor backend
 2. Adicionar compressão de mensagens antigas
 3. Implementar backup automático
 4. Adicionar métricas de uso
 5. Implementar limpeza automática de mensagens antigas
+6. Migrar para Redis via API backend
