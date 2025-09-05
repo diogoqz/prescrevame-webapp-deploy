@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,7 +36,7 @@ const AuthCard: React.FC<AuthCardProps> = ({
   onTogglePassword,
   onSubmit,
   onModeChange,
-  onSupport,
+  onSupport
 }) => {
   const [currentView, setCurrentView] = useState<AuthView>('main');
   
@@ -52,6 +52,8 @@ const AuthCard: React.FC<AuthCardProps> = ({
   
 
 
+=======
+>>>>>>> cb9685123df5a0785bbaccb010961542eb7d7b42
   return (
     <Card className="bg-whatsapp-bubbleReceived/95 border-none">
       <CardHeader>
@@ -77,6 +79,7 @@ const AuthCard: React.FC<AuthCardProps> = ({
       </CardHeader>
       <CardContent>
         <form onSubmit={onSubmit} className="space-y-4">
+<<<<<<< HEAD
           {authMode === 'signup' && (
             <div className="space-y-2">
               <Label htmlFor="inviteCode" className="text-gray-300">Código de Convite</Label>
@@ -92,6 +95,8 @@ const AuthCard: React.FC<AuthCardProps> = ({
             </div>
           )}
           
+=======
+>>>>>>> cb9685123df5a0785bbaccb010961542eb7d7b42
           <div className="space-y-2">
             <Label htmlFor="email" className="text-gray-300">Email</Label>
             <Input
@@ -127,25 +132,13 @@ const AuthCard: React.FC<AuthCardProps> = ({
             </div>
           </div>
 
-          {authMode === 'login' && (
-            <div className="flex justify-end">
-              <Button 
-                type="button" 
-                variant="link" 
-                className="p-0 h-auto text-sm text-prescrevame hover:text-prescrevame-light"
-                onClick={() => setCurrentView('reset-password')}
-              >
-                Esqueceu a senha?
-              </Button>
-            </div>
-          )}
-
           <Button 
             type="submit" 
-            className="w-full bg-prescrevame hover:bg-prescrevame-dark text-white font-medium transition-all"
+            className="w-full bg-prescrevame hover:bg-prescrevame-dark text-white font-medium transition-all duration-300"
           >
             {authMode === 'login' ? 'Entrar' : 'Cadastrar'}
           </Button>
+<<<<<<< HEAD
           
           {/* Opções alternativas de login */}
           <div className="relative my-6">
@@ -158,6 +151,8 @@ const AuthCard: React.FC<AuthCardProps> = ({
           </div>
           
 
+=======
+>>>>>>> cb9685123df5a0785bbaccb010961542eb7d7b42
         </form>
       </CardContent>
       <CardFooter className="flex flex-col space-y-4 pt-2">
