@@ -6,6 +6,7 @@ import { useAudioRecording } from '@/hooks/useAudioRecording';
 import { ChatHeader } from './chat/ChatHeader';
 import { ChatInput } from './chat/ChatInput';
 import MessageList from './chat/MessageList';
+import { TrialExpirationCounter } from './chat/TrialExpirationCounter';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Message } from '@/types/Message';
 import { AppConfig } from '@/config/app.config';
@@ -335,6 +336,8 @@ const WhatsAppChat: React.FC = () => {
             onSuggestionClick={handleSuggestionClick}
             showSuggestions={user && !hasUserMessages && !isTyping}
           />
+
+          <TrialExpirationCounter userEmail={user?.email || null} />
 
           <ChatInput
             inputMessage={inputMessage}
