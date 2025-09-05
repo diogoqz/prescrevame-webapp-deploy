@@ -18,6 +18,8 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
   const { signIn, signUp, signInWithGoogle, signInWithGoogleTrial, user, validateInviteCode } = useAuth();
+  const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Verificar se há código de convite na URL
   useEffect(() => {
@@ -109,8 +111,6 @@ const Auth = () => {
       void completeGoogleTrial();
     }
   }, [user, navigate, toast]);
-  const { toast } = useToast();
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (user) {
