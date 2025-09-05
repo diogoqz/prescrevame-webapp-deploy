@@ -1,11 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Eye, EyeOff, LogIn, UserPlus, MessageCircle, Mail } from 'lucide-react';
-import PasswordReset from './PasswordReset';
 
 interface AuthCardProps {
   authMode: 'login' | 'signup';
@@ -22,8 +21,6 @@ interface AuthCardProps {
   onSupport: () => void;
 }
 
-type AuthView = 'main' | 'reset-password';
-
 const AuthCard: React.FC<AuthCardProps> = ({
   authMode,
   email,
@@ -38,17 +35,6 @@ const AuthCard: React.FC<AuthCardProps> = ({
   onModeChange,
   onSupport
 }) => {
-  const [currentView, setCurrentView] = useState<AuthView>('main');
-  
-  if (currentView === 'reset-password') {
-    return (
-      <Card className="bg-whatsapp-bubbleReceived/95 border-none">
-        <CardContent className="pt-6">
-          <PasswordReset onBack={() => setCurrentView('main')} />
-        </CardContent>
-      </Card>
-    );
-  }
   
   return (
     <Card className="bg-whatsapp-bubbleReceived/95 border-none">
