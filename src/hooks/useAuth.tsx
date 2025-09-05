@@ -94,11 +94,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const getRedirectUrl = () => {
+    // Em desenvolvimento, usar localhost:5173 (Vite)
+    if (window.location.hostname === 'localhost') {
+      return 'http://localhost:5173/auth?oauth=';
+    }
+    // Em produção, usar a URL atual
+    return window.location.origin + '/auth?oauth=';
+  };
+
   const signInWithGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin + '/auth?oauth=google'
+        redirectTo: getRedirectUrl() + 'google'
       }
     });
     if (error) throw error;
@@ -108,7 +117,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin + '/auth?oauth=trial'
+        redirectTo: getRedirectUrl() + 'trial'
       }
     });
     if (error) throw error;
