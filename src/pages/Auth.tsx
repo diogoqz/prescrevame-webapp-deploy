@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import AuthCard from '@/components/auth/AuthCard';
 import { Stethoscope, Clock, Chrome, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '@/integrations/supabase/client';
+import { webhookService } from '@/services/webhookService';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -15,7 +17,7 @@ const Auth = () => {
   const [inviteCode, setInviteCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
-  const { signIn, signUp, signInWithGoogle, user, validateInviteCode } = useAuth();
+  const { signIn, signUp, signInWithGoogle, signInWithGoogleTrial, user, validateInviteCode } = useAuth();
 
   // Verificar se há código de convite na URL
   useEffect(() => {
@@ -26,6 +28,87 @@ const Auth = () => {
       setAuthMode('signup');
     }
   }, []);
+
+  // Processar retorno do Google OAuth para trial
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const oauthType = urlParams.get('oauth');
+    
+    if (oauthType === 'trial' && user) {
+      const completeGoogleTrial = async () => {
+        try {
+          // Verifica se já existe registro em users
+          const { data: existing, error: fetchErr } = await supabase
+            .from('users')
+            .select('id')
+            .eq('id', user.id)
+            .maybeSingle();
+
+          if (fetchErr) throw fetchErr;
+
+          if (!existing) {
+            const trialStartsAt = new Date();
+            const trialExpiresAt = new Date(trialStartsAt.getTime() + 24 * 60 * 60 * 1000);
+
+            const nomeFromGoogle = (user.user_metadata?.full_name as string) || (user.user_metadata?.name as string) || 'Usuário Google';
+
+            const { error: insertErr } = await supabase
+              .from('users')
+              .insert({
+                id: user.id,
+                email: user.email,
+                nome: nomeFromGoogle,
+                status: 'ativo',
+                is_trial: true,
+                trial_started_at: trialStartsAt.toISOString(),
+                trial_expires_at: trialExpiresAt.toISOString(),
+                invite_type: 'trial',
+                days_valid: 1,
+                activated_at: trialStartsAt.toISOString(),
+                expires_at: trialExpiresAt.toISOString(),
+              });
+
+            if (insertErr) throw insertErr;
+
+            // Disparar webhook (via Google OAuth)
+            await webhookService.sendTrialCreated({
+              type: 'trial_created',
+              user: {
+                id: user.id,
+                email: user.email || '',
+                nome: nomeFromGoogle,
+              },
+              trial: {
+                started_at: trialStartsAt.toISOString(),
+                expires_at: trialExpiresAt.toISOString(),
+                days_valid: 1,
+                invite_type: 'trial',
+              },
+              source: 'google',
+            });
+          }
+
+          toast({
+            title: 'Trial iniciado com Google!',
+            description: 'Você tem 24 horas de acesso grátis.',
+          });
+
+          // Limpa o parâmetro da URL e redireciona para o app
+          setTimeout(() => {
+            navigate('/', { replace: true });
+          }, 2000);
+        } catch (err: any) {
+          toast({
+            title: 'Erro ao concluir trial com Google',
+            description: err.message || 'Tente novamente.',
+            variant: 'destructive',
+          });
+        }
+      };
+
+      void completeGoogleTrial();
+    }
+  }, [user, navigate, toast]);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -87,8 +170,20 @@ const Auth = () => {
     }
   };
 
-  const handleGoogleTrial = () => {
-    navigate('/trial?oauth=google');
+  const handleGoogleTrial = async () => {
+    try {
+      await signInWithGoogleTrial();
+      toast({
+        title: "Redirecionando...",
+        description: "Você será redirecionado para o Google.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: error instanceof Error ? error.message : "Erro ao fazer trial com Google",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleQuickTrial = () => {

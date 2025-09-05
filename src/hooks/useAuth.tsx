@@ -4,6 +4,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { inviteService } from '@/services/inviteService';
 import { userService } from '@/services/userService';
+import { webhookService } from '@/services/webhookService';
 
 interface AuthContextType {
   user: User | null;
@@ -11,6 +12,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, inviteCode: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  signInWithGoogleTrial: () => Promise<void>;
   signOut: () => Promise<void>;
   sendPasswordResetEmail: (email: string) => Promise<void>;
   validateInviteCode: (code: string) => Promise<boolean>;
@@ -102,6 +104,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
   };
 
+  const signInWithGoogleTrial = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin + '/auth?oauth=trial'
+      }
+    });
+    if (error) throw error;
+  };
+
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
@@ -130,6 +142,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signIn, 
       signUp, 
       signInWithGoogle,
+      signInWithGoogleTrial,
       signOut,
       sendPasswordResetEmail,
       validateInviteCode,
