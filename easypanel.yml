@@ -1,0 +1,28 @@
+version: '1'
+
+services:
+  prescrevame-webapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    deploy_script: |
+      cd /code
+      npm install
+      npm run build
+      npm start
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - VITE_SUPABASE_URL=https://soaonapntsktpqoqptyz.supabase.co
+      - VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNvYW9uYXBudHNrdHBxb3FwdHl6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE4MzgzNDAsImV4cCI6MjA1NzQxNDM0MH0.hN2AeKcjJd94-O_egMln3VlBgpDmpv8gasLNhrnH4w4
+      - VITE_WEBHOOK_URL=https://srv-n8n.rtp53d.easypanel.host/webhook/bdb16435-5b9b-4d29-bd1f-50e2c5280217
+      - VITE_CHAT_WEBHOOK_URL=https://app-n8n.3gbyjx.easypanel.host/webhook/web-pme
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

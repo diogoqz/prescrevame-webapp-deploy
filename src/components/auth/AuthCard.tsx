@@ -1,10 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Eye, EyeOff, LogIn, UserPlus, MessageCircle, Mail } from 'lucide-react';
+import { Eye, EyeOff, LogIn, UserPlus, MessageCircle, Mail, Chrome } from 'lucide-react';
 
 interface AuthCardProps {
   authMode: 'login' | 'signup';
@@ -19,6 +19,7 @@ interface AuthCardProps {
   onSubmit: (e: React.FormEvent) => void;
   onModeChange: () => void;
   onSupport: () => void;
+  onGoogleSignIn?: () => void;
 }
 
 const AuthCard: React.FC<AuthCardProps> = ({
@@ -33,9 +34,37 @@ const AuthCard: React.FC<AuthCardProps> = ({
   onTogglePassword,
   onSubmit,
   onModeChange,
-  onSupport
+  onSupport,
+  onGoogleSignIn
 }) => {
-  
+  const [currentSupportPhrase, setCurrentSupportPhrase] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  const supportPhrases = [
+    "Precisa de ajuda? Fale com nosso atendente humano",
+    "Dúvidas? Converse com um especialista do Prescrevame",
+    "Time de suporte e vendas disponível 24/7 para você",
+    "Fale diretamente com nossa equipe de suporte e vendas",
+    "Dúvidas sobre o Prescrevame? Fale com um atendente humano",
+    "Dúvidas? Converse com um de nossos atendentes de suporte e vendas",
+    "Tire suas dúvidas com nosso time de suporte e vendas",
+    "Nossa equipe está pronta para esclarecer suas dúvidas",
+    "Atendimento humanizado, fale com nosso time de suporte e vendas",
+    "Qualquer dúvida, fale com nosso time de suporte e vendas"
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setCurrentSupportPhrase((prev) => (prev + 1) % supportPhrases.length);
+        setIsTransitioning(false);
+      }, 500);
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <Card className="bg-whatsapp-bubbleReceived/95 border-none">
       <CardHeader>
@@ -128,36 +157,35 @@ const AuthCard: React.FC<AuthCardProps> = ({
             </div>
           </div>
           
+          {/* Botão Google */}
+          {onGoogleSignIn && (
+            <Button
+              type="button"
+              onClick={onGoogleSignIn}
+              variant="outline"
+              className="w-full bg-white hover:bg-gray-50 text-gray-900 border-gray-300 hover:border-gray-400 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold"
+            >
+              <Chrome className="h-5 w-5 mr-3 text-blue-500" />
+              {authMode === 'login' ? 'Entrar com Google' : 'Cadastrar com Google'}
+            </Button>
+          )}
+          
         </form>
       </CardContent>
       <CardFooter className="flex flex-col space-y-4 pt-2">
         <div className="text-sm text-center text-gray-300">
-          {authMode === 'login' ? (
-            <>
-              Não tem uma conta?{' '}
-              <button
-                onClick={onModeChange}
-                className="text-prescrevame hover:text-prescrevame-light font-medium transition-colors"
-              >
-                Cadastre-se com Convite
-              </button>
-            </>
-          ) : (
-            <>
-              Já tem uma conta?{' '}
-              <button
-                onClick={onModeChange}
-                className="text-prescrevame hover:text-prescrevame-light font-medium transition-colors"
-              >
-                Faça login
-              </button>
-            </>
-          )}
+          <div className="min-h-[2.5rem] flex items-center justify-center">
+            <span className={`transition-all duration-500 ease-in-out ${
+              isTransitioning ? 'opacity-0 transform translate-y-1' : 'opacity-100 transform translate-y-0'
+            }`}>
+              {supportPhrases[currentSupportPhrase]}
+            </span>
+          </div>
         </div>
         <Button 
           variant="ghost"
           onClick={onSupport}
-          className="w-full text-gray-300 hover:text-white hover:bg-whatsapp-inputBg"
+          className="w-full text-gray-300 hover:text-white hover:bg-whatsapp-inputBg border border-gray-600/30 hover:border-gray-500/50 transition-all duration-300"
         >
           Suporte <MessageCircle className="ml-2 h-4 w-4" />
         </Button>

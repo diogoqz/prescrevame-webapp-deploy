@@ -3,9 +3,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import AuthCard from '@/components/auth/AuthCard';
-import { Stethoscope, Clock } from 'lucide-react';
+import { Stethoscope, Clock, Chrome, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Auth = () => {
@@ -14,7 +15,7 @@ const Auth = () => {
   const [inviteCode, setInviteCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
-  const { signIn, signUp, user, validateInviteCode } = useAuth();
+  const { signIn, signUp, signInWithGoogle, user, validateInviteCode } = useAuth();
 
   // Verificar se há código de convite na URL
   useEffect(() => {
@@ -68,6 +69,30 @@ const Auth = () => {
 
   const handleModeChange = () => {
     setAuthMode(prevMode => prevMode === 'login' ? 'signup' : 'login');
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithGoogle();
+      toast({
+        title: "Redirecionando...",
+        description: "Você será redirecionado para o Google.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: error instanceof Error ? error.message : "Erro ao fazer login com Google",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleGoogleTrial = () => {
+    navigate('/trial?oauth=google');
+  };
+
+  const handleQuickTrial = () => {
+    navigate('/trial');
   };
 
   return (
@@ -129,14 +154,111 @@ const Auth = () => {
             </span>
             <span className="text-white">.me</span>
           </motion.h1>
-          <motion.p 
+          <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.5 }}
             className="text-gray-400 mt-2"
           >
-            Sua plataforma de assistência médica inteligente
-          </motion.p>
+            <p className="text-lg font-semibold text-white mb-1">
+              Inteligência Artificial feita para médicos
+            </p>
+            <p className="text-sm">
+              Seu colega de plantão 24/7 com guias confiáveis, discussão de casos e suporte clínico inteligente
+            </p>
+          </motion.div>
+        </motion.div>
+
+        {/* Box de Teste Grátis */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.8 }}
+          className="mb-6"
+        >
+          <Card className="bg-whatsapp-bubbleReceived/95 border-none shadow-lg hover:shadow-xl transition-all duration-300">
+            <CardContent className="p-6">
+              {/* Badge de Destaque */}
+              <div className="flex items-center justify-center mb-4">
+                <div className="bg-prescrevame text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
+                  🎉 OFERTA ESPECIAL
+                </div>
+              </div>
+
+              {/* Título Persuasivo */}
+              <h2 className="text-2xl font-bold text-white text-center mb-2">
+                Teste Grátis por 24 Horas!
+              </h2>
+              
+              <p className="text-gray-300 text-center mb-6 text-sm">
+                Experimente nossa IA médica sem compromisso. 
+                <br />
+                <span className="text-prescrevame font-semibold">Sem cartão de crédito necessário!</span>
+              </p>
+
+              {/* Benefícios */}
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                <div className="flex items-center gap-2 text-gray-300 text-sm">
+                  <div className="w-2 h-2 bg-prescrevame rounded-full"></div>
+                  <span>Acesso completo</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-300 text-sm">
+                  <div className="w-2 h-2 bg-prescrevame rounded-full"></div>
+                  <span>IA médica avançada</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-300 text-sm">
+                  <div className="w-2 h-2 bg-prescrevame rounded-full"></div>
+                  <span>Suporte 24/7</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-300 text-sm">
+                  <div className="w-2 h-2 bg-prescrevame rounded-full"></div>
+                  <span>Cancele quando quiser</span>
+                </div>
+              </div>
+
+              {/* Botões de Ação */}
+              <div className="space-y-3">
+                {/* Botão Google OAuth */}
+                <Button
+                  onClick={handleGoogleTrial}
+                  variant="outline"
+                  className="w-full bg-white hover:bg-gray-50 text-gray-900 border-gray-300 hover:border-gray-400 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold"
+                >
+                  <Chrome className="h-5 w-5 mr-3 text-blue-500" />
+                  Cadastrar com Google
+                </Button>
+
+                {/* Botão Cadastro com Email */}
+                <Button
+                  onClick={handleQuickTrial}
+                  className="w-full bg-gradient-to-r from-prescrevame to-prescrevame-light hover:from-prescrevame-dark hover:to-prescrevame text-white border-none transition-all duration-200 shadow-lg hover:shadow-xl font-semibold"
+                >
+                  <Zap className="h-5 w-5 mr-3" />
+                  Cadastrar com Email
+                </Button>
+              </div>
+
+              {/* Texto de Segurança */}
+              <p className="text-gray-400 text-xs text-center mt-4">
+                🔒 Exclusivo para médicos ou estudantes de medicina.
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Divisor */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 1 }}
+          className="relative my-6"
+        >
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-600"></div>
+          </div>
+          <div className="relative flex justify-center text-xs">
+            <span className="px-3 bg-whatsapp-bg text-gray-400">ou se você já é cliente, faça login</span>
+          </div>
         </motion.div>
 
         <AnimatePresence mode="wait">
@@ -162,6 +284,7 @@ const Auth = () => {
                 onSubmit={handleSubmit}
                 onModeChange={handleModeChange}
                 onSupport={handleSupport}
+                onGoogleSignIn={handleGoogleSignIn}
               />
             </Card>
           </motion.div>
@@ -170,42 +293,13 @@ const Auth = () => {
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 1, delay: 1 }}
-          className="mt-8 text-center space-y-4"
+          transition={{ duration: 1, delay: 1.2 }}
+          className="mt-8 text-center"
         >
           <div className="flex items-center justify-center gap-2 text-gray-400">
             <Stethoscope className="h-5 w-5" />
             <span className="text-sm">Tecnologia a serviço da medicina</span>
           </div>
-          
-          {/* Botão de Trial */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 1.5 }}
-            className="bg-whatsapp-bubbleReceived border border-prescrevame/20 rounded-lg p-4 shadow-lg hover:shadow-xl transition-all duration-300"
-          >
-            {/* Banner de informação */}
-            <div className="bg-prescrevame/10 border border-prescrevame/20 rounded-lg p-3 mb-4">
-              <div className="flex items-center justify-center gap-2 text-prescrevame">
-                <Clock className="h-4 w-4" />
-                <span className="text-sm font-medium">
-                  Apenas médicos e estudantes de medicina
-                </span>
-              </div>
-            </div>
-            
-            <h3 className="text-white font-semibold mb-2 text-center">Experimente Grátis por 24 Horas!</h3>
-            <p className="text-whatsapp-textSecondary text-sm mb-4 text-center">
-              Teste completo para médicos e estudantes de medicina
-            </p>
-            <button
-              onClick={() => navigate('/trial')}
-              className="w-full bg-prescrevame hover:bg-prescrevame-dark text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
-            >
-              Começar Trial Gratuito
-            </button>
-          </motion.div>
         </motion.div>
       </div>
     </div>
